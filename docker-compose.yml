@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql:latest
+    volumes: 
+        - ./init:/docker-entrypoint-initdb.d
+    ports:
+        - "${DB_PORT}:3306"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_HOST: '%'
+  db-test:
+    image: mysql:latest
+    volumes: 
+        - ./init:/docker-entrypoint-initdb.d
+    ports:
+        - "${DB_TEST_PORT}:3306"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_TEST_PASSWORD}
+      MYSQL_USER: ${DB_TEST_USERNAME}
+      MYSQL_DATABASE: ${DB_TEST_DATABASE}
+      MYSQL_PASSWORD: ${DB_TEST_PASSWORD}
+      MYSQL_ROOT_HOST: '%'    
