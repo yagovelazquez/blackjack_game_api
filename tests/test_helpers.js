@@ -7,17 +7,17 @@ const { models } = require('../src/models');
 let db;
 
 class TestHelpers {
-  static async startDb() {
+  static async start_db() {
     db = new Database('test', db_config);
     await db.connect();
     return db;
   }
 
-  static async stopDb() {
+  static async stop_db() {
     await db.disconnect();
   }
 
-  static async syncDb() {
+  static async sync_db() {
     await db.sync();
   }
 
@@ -32,14 +32,14 @@ class TestHelpers {
     };
   }
 
-  static async createNewUser(userParams = {}) {
+  static async create_new_user(userParams = {}) {
     const { models } = require('../src/models');
     const fake_user = this.generate_random_user(userParams);
     const { User } = models;
     return User.create(fake_user);
   }
 
-  static getApp() {
+  static get_app() {
     const App = require('../src/app');
     return new App().getApp();
   }

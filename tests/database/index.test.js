@@ -1,5 +1,5 @@
-const Database = require("../../src/database");
-const db_config = require("../../src/config/database")
+const Database = require('../../src/database');
+const db_config = require('../../src/config/database');
 
 describe('Database', () => {
   let database;
@@ -7,7 +7,7 @@ describe('Database', () => {
   beforeEach(async () => {
     const environment = process.env.NODE_ENV;
     database = new Database(environment, db_config);
-    await database.connect()
+    await database.connect();
   });
 
   afterEach(async () => {
@@ -23,10 +23,9 @@ describe('Database', () => {
 
   describe('disconnect', () => {
     it('should close the database connection', async () => {
-      await database.connect()
+      await database.connect();
       await database.disconnect();
       //TODO FIX THIS await expect(database.connection.authenticate({ logging: false })).rejects.toThrow();
-
     });
   });
 
@@ -36,5 +35,4 @@ describe('Database', () => {
       // Add assertions here to check if models are synchronized
     });
   });
-
 });

@@ -5,15 +5,15 @@ const TestHelpers = require('../test_helpers');
 
 describe('User model', () => {
   beforeAll(async () => {
-    await TestsHelpers.startDb();
+    await TestsHelpers.start_db();
   });
 
   afterAll(async () => {
-    await TestsHelpers.stopDb();
+    await TestsHelpers.stop_db();
   });
 
   beforeEach(async () => {
-    await TestsHelpers.syncDb();
+    await TestsHelpers.sync_db();
   });
 
   describe('instance methods', () => {
@@ -34,7 +34,7 @@ describe('User model', () => {
       let user;
 
       beforeEach(async () => {
-        user = await TestsHelpers.createNewUser({ password });
+        user = await TestsHelpers.create_new_user({ password });
       });
 
       it('should return true if the password is correct', async () => {
@@ -125,10 +125,10 @@ describe('User model', () => {
       expect(user.password).not.toEqual(fake_user.password);
     });
 
-    it ('should delete password from datavalues', async () => {
-      const user = await TestHelpers.createNewUser()
-      expect(user.dataValues.password).toBeUndefined()
-    })
+    it('should delete password from datavalues', async () => {
+      const user = await TestHelpers.create_new_user();
+      expect(user.dataValues.password).toBeUndefined();
+    });
 
     it('should not allow blank/empty passwords', async () => {
       const fake_user = { password: '' };

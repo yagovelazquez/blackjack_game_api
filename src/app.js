@@ -1,5 +1,6 @@
-const express = require('express')
+const express = require('express');
 const logger = require('morgan');
+const { v1Routes } = require('./controllers');
 
 class App {
   constructor() {
@@ -13,6 +14,7 @@ class App {
   }
 
   setRoutes() {
+    this.app.use('/v1', v1Routes);
   }
 
   getApp() {
@@ -27,4 +29,4 @@ class App {
   }
 }
 
-module.exports = App
+module.exports = App;
