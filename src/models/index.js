@@ -26,5 +26,5 @@ function registerModels(sequelize) {
 
 module.exports = {
   registerModels,
-  ...models,
+  models,
 };

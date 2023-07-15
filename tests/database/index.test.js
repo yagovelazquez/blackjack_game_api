@@ -1,5 +1,5 @@
-const Database = require("../../../src/database");
-const db_config = require("../../../src/config/database")
+const Database = require("../../src/database");
+const db_config = require("../../src/config/database")
 
 describe('Database', () => {
   let database;
