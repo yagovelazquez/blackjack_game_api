@@ -7,6 +7,9 @@ module.exports = (sequelize) => {
     static async hashPassword(password) {
       return bcrypt.hash(password, config.saltRounds);
     }
+    static associate (models) {
+      User.hasMany(models.Game, { foreignKey: "user_id", as: "games" });
+    }
   }
 
   User.init(

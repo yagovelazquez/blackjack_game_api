@@ -8,6 +8,9 @@ module.exports = {
     port: parseInt(process.env.DB_PORT) || 3306,
     database: process.env.DB_DATABASE || 'mysql',
     dialect: 'mysql',
+    define: {
+      timestamps: true,
+    },
   },
   test: {
     username: process.env.DB_TEST_USERNAME || 'mysql',
@@ -16,5 +19,8 @@ module.exports = {
     port: parseInt(process.env.DB_TEST_PORT) || 3307,
     database: process.env.DB_TEST_DATABASE || 'mysql',
     dialect: 'mysql',
+    define: {
+      timestamps: true,
+    },
   },
 };

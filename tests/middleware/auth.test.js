@@ -1,5 +1,6 @@
 const auth = require('../../src/middleware/auth');
-const TestHelpers = require('../test_helpers');
+const TestHelpers = require('../helpers/test_helpers')
+
 const JWTUtils = require('../../src/utils/jwt_utils');
 
 describe('Auth Middleware', () => {

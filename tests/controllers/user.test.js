@@ -1,7 +1,7 @@
 const request = require('supertest');
 const { models } = require('../../src/models');
 const JWTUtils = require('../../src/utils/jwt_utils');
-const TestHelpers = require('../test_helpers');
+const TestHelpers = require('../helpers/test_helpers');
 
 //TODO add restrictions on application level rather than just relying on database
 
@@ -97,7 +97,4 @@ describe('register', () => {
       expect(res.body.success).toEqual(false);
     });
   });
-  //should return a loken access when trying to login with success credentials
-  //it should return invalid when trying to login with bad credentials
-  //it should return invalid if user does not exists
 });

@@ -23,5 +23,8 @@
     "sequelize": "^6.32.1",
     "sequelize-cli": "^6.6.1",
     "supertest": "^6.3.3"
+  },
+  "devDependencies": {
+    "faker": "^5.5.3"
   }
 }
