@@ -24,8 +24,33 @@ class UserController {
       });
     }
   }
+
+  static async login(req, res) {
+    try {
+      const { password, email } = req.body;
+      const user = await User.scope('withPassword').findOne({
+        where: { email },
+      });
+      if (!user || !(await user.comparePasswords(password))) {
+        return res
+          .status(401)
+          .send({ success: false, message: 'Invalid credentials' });
+      }
+      const payload = { user_id: user.id };
+      const accessToken = JWTUtils.generateAccessToken(payload);
+
+      return res.status(200).send({
+        success: true,
+        message: 'User successfully registered',
+        data: { accessToken },
+      });
+    } catch (err) {
+      return res.status(401).send({ success: false, message: err.message });
+    }
+  }
 }
 
 router.post('/user/register', UserController.register);
+router.post('/user/login', UserController.login);
 
 module.exports = router;
