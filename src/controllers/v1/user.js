@@ -26,7 +26,6 @@ class UserController {
   }
 
   static async login(req, res) {
-    try {
       const { password, email } = req.body;
       const user = await User.scope('withPassword').findOne({
         where: { email },
@@ -44,9 +43,6 @@ class UserController {
         message: 'User successfully registered',
         data: { accessToken },
       });
-    } catch (err) {
-      return res.status(401).send({ success: false, message: err.message });
-    }
   }
 }
 

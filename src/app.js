@@ -12,11 +12,11 @@ class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.setRoutes();
+    this.app.use(errors);
   }
 
   setRoutes() {
     this.app.use('/v1', v1Routes);
-    this.app.use(errors);
   }
 
   getApp() {
