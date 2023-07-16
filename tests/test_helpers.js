@@ -57,7 +57,9 @@ class TestHelpers {
     session: { data },
     headers,
     body,
-  });  
+  });
+  
+  static mock_error = (message) => new Error(message)
 
   static mock_next = () => jest.fn();
 

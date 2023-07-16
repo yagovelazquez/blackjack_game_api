@@ -1,6 +1,7 @@
 const express = require('express');
 const logger = require('morgan');
 const { v1Routes } = require('./controllers');
+const errors = require('./middleware/errors');
 
 class App {
   constructor() {
@@ -15,6 +16,7 @@ class App {
 
   setRoutes() {
     this.app.use('/v1', v1Routes);
+    this.app.use(errors);
   }
 
   getApp() {
