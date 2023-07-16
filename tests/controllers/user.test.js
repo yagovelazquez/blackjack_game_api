@@ -19,12 +19,16 @@ describe('register', () => {
   it('should successfully create an account', async () => {
     const { User } = models;
     const fake_user = TestHelpers.generate_random_user();
-    await request(app).post('/v1/user/register').send(fake_user).expect(200);
+    const res = await request(app).post('/v1/user/register').send(fake_user).expect(200);
     const users = await User.findAll({
       where: {
         email: fake_user.email,
       },
     });
+    expect(res.body.data).toHaveProperty('accessToken')
+    expect(res.body.data.accessToken).toBeDefined()
+    expect(res.body.message).toEqual('User successfully registered')
+    expect(res.body.success).toEqual(true)
     expect(users.length).toEqual(1);
     expect(users[0]).not.toBeNull();
     expect(users[0].email).toEqual(fake_user.email);
