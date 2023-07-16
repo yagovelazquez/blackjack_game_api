@@ -3,6 +3,7 @@ const Database = require('../src/database');
 const db_config = require('../src/config/database');
 const request = require('supertest');
 const { models } = require('../src/models');
+const JWTUtils = require('../src/utils/jwt_utils');
 
 let db;
 
@@ -43,6 +44,25 @@ class TestHelpers {
     const App = require('../src/app');
     return new App().getApp();
   }
+
+  static mock_response = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnValue(res);
+    res.json = jest.fn().mockReturnValue(res);
+    res.send = jest.fn().mockReturnValue(res);
+    return res;
+  };
+
+  static mock_request = ({ data = {}, headers = {}, body = {} } = {}) => ({
+    session: { data },
+    headers,
+    body,
+  });  
+
+  static mock_next = () => jest.fn();
+
+  static generate_token = (payload = { test: 'test' }) =>
+    JWTUtils.generateAccessToken(payload);
 
   static async test_model_validation_error({ random_user_obj, error_message }) {
     const { User } = models;
