@@ -67,15 +67,15 @@ describe('Auth Middleware', () => {
     expect(mock_response.status).toHaveBeenCalledWith(401);
   });
 
-  it('should call jwtutils.verifyrefreshtoken if refresh_token is passed as argument to auth', () => {
-    const spy = jest.spyOn(JWTUtils, 'verifyRefreshToken');
+  it('should call jwtutils.verify_refresh_token if refresh_token is passed as argument to auth', () => {
+    const spy = jest.spyOn(JWTUtils, 'verify_refresh_token');
 
     auth('refresh_token')(mock_valid_request, mock_response, mock_next);
     expect(spy).toBeCalled();
   });
 
-  it('should call jwtutils.verifyAccessToken if access_token is passed as argument to auth', () => {
-    const spy = jest.spyOn(JWTUtils, 'verifyAccessToken');
+  it('should call jwtutils.verify_access_token if access_token is passed as argument to auth', () => {
+    const spy = jest.spyOn(JWTUtils, 'verify_access_token');
     auth('access_token')(mock_valid_request, mock_response, mock_next);
     expect(spy).toBeCalled();
   });

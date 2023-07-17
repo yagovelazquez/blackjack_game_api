@@ -25,10 +25,10 @@ function auth(token_type = 'access_token') {
       let jwt;
       switch (token_type) {
         case 'refresh_token':
-          jwt = JWTUtils.verifyRefreshToken(token);
+          jwt = JWTUtils.verify_refresh_token(token);
           break;
         case 'access_token':
-          jwt = JWTUtils.verifyAccessToken(token);
+          jwt = JWTUtils.verify_access_token(token);
           break;
       }
       req.body.jwt = jwt;

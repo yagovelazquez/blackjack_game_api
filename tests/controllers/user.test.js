@@ -5,7 +5,7 @@ const TestHelpers = require('../helpers/test_helpers');
 
 //TODO add restrictions on application level rather than just relying on database
 
-describe('register', () => {
+describe('user', () => {
   let User;
   let app;
   beforeAll(async () => {
@@ -31,10 +31,10 @@ describe('register', () => {
           email: fake_user.email,
         },
       });
-      expect(res.body.data).toHaveProperty('accessToken');
-      expect(res.body.data.accessToken).toBeDefined();
-      const accessToken = res.body.data.accessToken;
-      const payload = JWTUtils.verifyAccessToken(accessToken);
+      expect(res.body.data).toHaveProperty('access_token');
+      expect(res.body.data.access_token).toBeDefined();
+      const access_token = res.body.data.access_token;
+      const payload = JWTUtils.verify_access_token(access_token);
       expect(payload).toHaveProperty('user_id');
       expect(res.body.message).toEqual('User successfully registered');
       expect(res.body.success).toEqual(true);
@@ -67,11 +67,11 @@ describe('register', () => {
         .post('/v1/user/login')
         .send(fake_user)
         .expect(200);
-      expect(res.body.data).toHaveProperty('accessToken');
-      expect(res.body.data.accessToken).toBeDefined();
+      expect(res.body.data).toHaveProperty('access_token');
+      expect(res.body.data.access_token).toBeDefined();
       expect(res.body.message).toEqual('User successfully registered');
       expect(res.body.success).toEqual(true);
-      const payload = JWTUtils.verifyAccessToken(res.body.data.accessToken);
+      const payload = JWTUtils.verify_access_token(res.body.data.access_token);
       expect(payload).toHaveProperty('user_id');
       expect(payload.user_id).toEqual(user.id);
     });

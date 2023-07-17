@@ -10,12 +10,12 @@ class UserController {
     try {
       const newUser = await User.create({ ...req.body });
       const payload = { user_id: newUser.id };
-      const accessToken = JWTUtils.generateAccessToken(payload);
+      const access_token = JWTUtils.generateaccess_token(payload);
 
       return res.status(200).send({
         success: true,
         message: 'User successfully registered',
-        data: { accessToken },
+        data: { access_token },
       });
     } catch (err) {
       return res.status(400).send({
@@ -36,12 +36,12 @@ class UserController {
           .send({ success: false, message: 'Invalid credentials' });
       }
       const payload = { user_id: user.id };
-      const accessToken = JWTUtils.generateAccessToken(payload);
+      const access_token = JWTUtils.generateaccess_token(payload);
 
       return res.status(200).send({
         success: true,
         message: 'User successfully registered',
-        data: { accessToken },
+        data: { access_token },
       });
   }
 }

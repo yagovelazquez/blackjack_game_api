@@ -42,6 +42,12 @@ class TestHelpers {
     return User.create(fake_user);
   }
 
+  static async create_user_and_get_token(app) {
+    const fake_user = TestHelpers.generate_random_user();
+    const res = await request(app).post('/v1/user/register').send(fake_user);
+    return res.body.data;
+  }
+
   static get_app() {
     const App = require('../../src/app');
     return new App().getApp();
@@ -76,7 +82,7 @@ class TestHelpers {
   };
 
   static generate_token = (payload = { test: 'test' }) =>
-    JWTUtils.generateAccessToken(payload);
+    JWTUtils.generateaccess_token(payload);
 
   static async test_user_model_validation_error({
     random_user_obj,
