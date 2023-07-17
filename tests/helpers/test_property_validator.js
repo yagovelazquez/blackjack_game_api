@@ -6,6 +6,9 @@ class ModelPropertyValidator {
     this.model_name = model_name;
 
     this.modelConfig = {
+      TableHand: {
+        generate_random_data: TestHelpers.generate_random_table_hand  
+      },
       User: {
         generate_random_data: TestHelpers.generate_random_user,
       },
@@ -30,7 +33,8 @@ class ModelPropertyValidator {
     let errorObj;
 
     try {
-      await Model.create(fakeData);
+      const aq = await Model.create(fakeData);
+      console.log(aq)
     } catch (error) {
       err = error;
       errorObj = error.errors[0];

@@ -81,6 +81,18 @@ class TestHelpers {
     };
   };
 
+  static generate_random_table_hand = async (table_params = {}) => {
+    const { Game } = models;
+    const random_game = await this.generate_random_game();
+    const game = await Game.create(random_game);
+    return {
+      bet_value: 10.5,
+      game_id: game.id,
+      user_id: random_game.user_id,
+      ...table_params
+    };
+  };
+
   static generate_token = (payload = { test: 'test' }) =>
     JWTUtils.generateaccess_token(payload);
 
