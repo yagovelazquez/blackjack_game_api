@@ -24,6 +24,19 @@ class TestHelpers {
     await db.sync();
   }
 
+  static async generate_random_card(card_params = {}) {
+    const { Card } = models
+    const id = await Card.generate_id(card_params.rank || enums.card_rank[1], card_params.suit || enums.card_suit.CLUBS)
+    return {
+      id: id,
+      rank: enums.card_rank[1],
+      value: enums.card_values.one,
+      suit: enums.card_suit.CLUBS,
+      second_value: enums.card_values.eleven,
+      ...card_params
+    }
+  }
+
   static generate_random_user(user_params = {}) {
     return {
       email: faker.internet.email(),

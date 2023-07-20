@@ -1,6 +1,6 @@
 const { models } = require('../../src/models');
 const randomstring = require('randomstring');
-const TestHelpers = require('../helpers/test_helpers')
+const TestHelpers = require('../helpers/test_helpers');
 
 describe('User model', () => {
   beforeAll(async () => {
@@ -153,7 +153,7 @@ describe('User model', () => {
       });
       await User.create(fake_user);
       await TestHelpers.test_user_model_validation_error({
-        random_user_obj: undefined,
+        random_user_obj: { username: fake_user.username },
         error_message: 'username must be unique',
       });
     });

@@ -12,7 +12,7 @@ const enums = require('../../src/enum');
 const { models } = require('../../src/models');
 const Lib = require('../../src/utils/lib');
 const TestHelpers = require('../helpers/test_helpers');
-const ModelPropertyValidator = require('../helpers/test_property_validator');
+const ModelPropertyTester = require('../helpers/test_model_properties');
 
 let Game;
 let TableHand;
@@ -59,7 +59,7 @@ describe('Table hand', () => {
         expect(table_hand.bet_value).toEqual(random_table_hand.bet_value);
       });
       it('should return an error if bet_value is smaller or equal 0', async () => {
-        const table_hand_property_validator = new ModelPropertyValidator(
+        const table_hand_property_validator = new ModelPropertyTester(
           'TableHand'
         );
         await table_hand_property_validator.test_property_error({
@@ -70,7 +70,7 @@ describe('Table hand', () => {
         });
       });
       it('should not allow null values', async () => {
-        const table_hand_property_validator = new ModelPropertyValidator(
+        const table_hand_property_validator = new ModelPropertyTester(
           'TableHand'
         );
         await table_hand_property_validator.test_property_error({

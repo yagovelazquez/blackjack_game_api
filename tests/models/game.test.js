@@ -2,7 +2,7 @@ const enums = require('../../src/enum');
 const { models } = require('../../src/models');
 const Lib = require('../../src/utils/lib');
 const TestHelpers = require('../helpers/test_helpers');
-const ModelPropertyValidator = require('../helpers/test_property_validator');
+const ModelPropertyTester = require('../helpers/test_model_properties');
 
 let Game;
 
@@ -58,7 +58,7 @@ describe('Game model', () => {
         expect(db_game.status).toEqual(enums.game_status.IN_PROGRESS);
       });
       it('should not allow null status value', async () => {
-        const model_property_validator = new ModelPropertyValidator('Game');
+        const model_property_validator = new ModelPropertyTester('Game');
         await model_property_validator.test_property_error({
           data: { status: null },
           error_message: 'Game.status cannot be null',
@@ -101,7 +101,7 @@ describe('Game model', () => {
         expect(err).toEqual(error_message);
       });
       it('should not allow null values', async () => {
-        const model_property_validator = new ModelPropertyValidator('Game');
+        const model_property_validator = new ModelPropertyTester('Game');
         await model_property_validator.test_property_error({
           data: { house_balance_fluctuation: null },
           error_message: 'Game.house_balance_fluctuation cannot be null',
@@ -142,7 +142,7 @@ describe('Game model', () => {
         ).toBe(true);
       });
       it('should not allow null values', async () => {
-        const model_property_validator = new ModelPropertyValidator('Game');
+        const model_property_validator = new ModelPropertyTester('Game');
         await model_property_validator.test_property_error({
           data: { user_balance_fluctuation: null },
           error_message: 'Game.user_balance_fluctuation cannot be null',
