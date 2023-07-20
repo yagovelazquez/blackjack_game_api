@@ -1,6 +1,6 @@
 const cls = require('cls-hooked');
 const Sequelize = require('sequelize');
-const { registerModels } = require('../models');
+const { registerModels, models } = require('../models');
 
 class Database {
   constructor(environment, db_config) {
@@ -13,7 +13,6 @@ class Database {
     const namespace = cls.createNamespace('transactions-namespace');
     Sequelize.useCLS(namespace);
 
-    // Create the connection
     const { username, password, host, port, database, dialect } =
       this.db_config[this.environment];
     this.connection = new Sequelize({
@@ -26,7 +25,6 @@ class Database {
       logging: this.isTestEnvironment ? false : console.log,
     });
 
-    // Check if we connected successfully
     await this.connection.authenticate({ logging: false });
 
     if (!this.isTestEnvironment) {
@@ -35,10 +33,7 @@ class Database {
       );
     }
 
-    // Register the models
     registerModels(this.connection);
-
-    // Sync the models
     await this.sync();
   }
 
@@ -46,16 +41,27 @@ class Database {
     await this.connection.close();
   }
 
+  async seed_database({ model_name, seed_data }) {
+    try {
+      const { [model_name]: Model } = models;
+      await Model.bulkCreate(seed_data);
+      !this.isTestEnvironment && console.log('Database seeded successfully.');
+    } catch (error) {
+      !this.isTestEnvironment &&
+        console.error('Error seeding the database:', error);
+    }
+  }
+
   async sync() {
-    await this.connection.sync({
-      logging: false,
-      force: this.isTestEnvironment,
-    });
+      await this.connection.sync({
+        logging: false,
+        force: this.isTestEnvironment,
+      });
 
     if (!this.isTestEnvironment) {
       console.log('Connection synced successfully');
     }
   }
-}
+};
 
 module.exports = Database;

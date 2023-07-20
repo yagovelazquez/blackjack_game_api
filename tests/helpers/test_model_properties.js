@@ -14,6 +14,9 @@ class ModelPropertyTester {
       User: {
         generate_random_data: TestHelpers.generate_random_user,
       },
+      Deck: {
+        generate_random_data: TestHelpers.generate_random_deck,
+      },
       Game: {
         generate_random_data: TestHelpers.generate_random_game,
       },
@@ -30,7 +33,7 @@ class ModelPropertyTester {
 
   async test_store_enum_values(enum_values, property, before_interation_cb) {
     Object.values(enum_values).forEach(async (value) => {
-      before_interation_cb && await before_interation_cb();
+      before_interation_cb && (await before_interation_cb());
       await this.test_create_property(value, property);
     });
   }

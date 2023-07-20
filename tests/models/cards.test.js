@@ -4,12 +4,6 @@ const TestHelpers = require('../helpers/test_helpers');
 const ModelPropertyTester = require('../helpers/test_model_properties');
 const enums = require('../../src/enum');
 
-// model cartas, que o id é aquele dicionario la
-// suit
-// rank
-// lower_value
-// bigger_value
-
 let Card;
 let random_card;
 let card_property_tester;
@@ -38,7 +32,9 @@ describe('Card model', () => {
           'rank'
         );
       });
-
+      it('should not allow values that are not in the enum', async () => {
+        await card_property_tester.test_invalid_enum_value('rank', 'test123');
+      });
       it('should not allow null values', async () => {
         await card_property_tester.test_property_error({
           data: { ...random_card, rank: null },

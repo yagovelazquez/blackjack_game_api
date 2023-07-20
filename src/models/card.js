@@ -3,7 +3,7 @@ const enums = require('../enum');
 
 module.exports = (sequelize) => {
   class Card extends Model {
-    static async generate_id(rank, suit) {
+    static generate_id(rank, suit) {
       const valid_ranks = Object.values(enums.card_rank);
       const valid_suits = Object.values(enums.card_suit);
 
@@ -59,6 +59,7 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: 'Card',
       validate: true,
+      timestamps: false,
       hooks: {
         beforeCreate: async (card) => {
           if (!card.id) {

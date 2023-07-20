@@ -15,9 +15,11 @@ module.exports = (sequelize) => {
     {
       user_id: {
         type: DataTypes.INTEGER,
+        allowNull: false,
       },
       game_id: {
         type: DataTypes.INTEGER,
+        allowNull: false,
       },
       bet_value: {
         type: DataTypes.DECIMAL(10, 2),

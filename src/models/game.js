@@ -6,6 +6,7 @@ module.exports = (sequelize) => {
     static associate(models) {
       Game.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
       Game.hasMany(models.TableHand, { foreignKey: "user_id", as: "table_hands" });
+      Game.hasOne(models.Deck, { foreignKey: "game_id", as: "deck" });
     }
   }
 
@@ -31,6 +32,7 @@ module.exports = (sequelize) => {
       },
         user_id: {
         type: DataTypes.INTEGER,
+        allowNull: false,
       }
     },
     {
