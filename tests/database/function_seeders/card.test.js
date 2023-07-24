@@ -1,21 +1,23 @@
-const get_all_cards = require('../../../src/database/function_seeders/cards'); 
+const {
+  get_all_cards,
+} = require('../../../src/database/function_seeders/cards');
 const enums = require('../../../src/enum');
 const { models } = require('../../../src/models');
 
-
 describe('get_all_cards', () => {
-  let generate_id
+  let generate_id;
   beforeEach(() => {
-    models.Card = {}
-    models.Card.generate_id = jest.fn((rank, suit) => `${rank}_${suit}`)
-    generate_id = models.Card.generate_id
-  })
+    models.Card = {};
+    models.Card.generate_id = jest.fn((rank, suit) => `${rank}_${suit}`);
+    generate_id = models.Card.generate_id;
+  });
   it('should generate an array of cards with valid data', () => {
     const result = get_all_cards();
 
     expect(result).toBeInstanceOf(Array);
-    expect(result.length).toBe(Object.keys(enums.card_suit).length * Object.keys(enums.card_rank).length);
-
+    expect(result.length).toBe(
+      Object.keys(enums.card_suit).length * Object.keys(enums.card_rank).length
+    );
 
     result.forEach((card) => {
       expect(card).toHaveProperty('id');
@@ -34,7 +36,9 @@ describe('get_all_cards', () => {
 
   it('should set second value only for ace(1)', () => {
     const result = get_all_cards();
-    const non_ace_card = result.find((card) => card.rank !== enums.card_rank[1]);
+    const non_ace_card = result.find(
+      (card) => card.rank !== enums.card_rank[1]
+    );
     const ace_card = result.find((card) => card.rank === enums.card_rank[1]);
 
     expect(non_ace_card).toBeDefined();
@@ -50,7 +54,10 @@ describe('get_all_cards', () => {
 
     for (const suit in enums.card_suit) {
       for (const rank in enums.card_rank) {
-        expect(generate_id).toHaveBeenCalledWith(enums.card_rank[rank], enums.card_suit[suit]);
+        expect(generate_id).toHaveBeenCalledWith(
+          enums.card_rank[rank],
+          enums.card_suit[suit]
+        );
       }
     }
   });

@@ -3,7 +3,7 @@ const enums = require('../../enum');
 const { models } = require('../../models');
 
 const get_all_cards = () => {
-  const { Card } = models
+  const { Card } = models;
   const seed_data = [];
   for (const suit in enums.card_suit) {
     for (const rank in enums.card_rank) {
@@ -28,4 +28,10 @@ const get_all_cards = () => {
   return seed_data;
 };
 
-module.exports = get_all_cards;
+const is_cards = async () => {
+  const seed_data = get_all_cards()
+  const card = await models.Card.findByPk(seed_data[0].id);
+  return !!card;
+};
+
+module.exports = { get_all_cards, is_cards };

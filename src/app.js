@@ -2,10 +2,12 @@ const express = require('express');
 const logger = require('morgan');
 const { v1Routes } = require('./controllers');
 const errors = require('./middleware/errors');
+let cors = require('cors');
 
 class App {
   constructor() {
     this.app = express();
+    this.app.use(cors({ origin: process.env.CLIENT_URL }));
     this.app.use(
       logger('dev', { skip: (req, res) => process.env.NODE_ENV === 'test' })
     );

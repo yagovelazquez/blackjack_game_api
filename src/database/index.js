@@ -1,6 +1,7 @@
 const cls = require('cls-hooked');
 const Sequelize = require('sequelize');
 const { registerModels, models } = require('../models');
+const { is_cards, get_all_cards } = require('./function_seeders/cards');
 
 class Database {
   constructor(environment, db_config) {
@@ -35,6 +36,7 @@ class Database {
 
     registerModels(this.connection);
     await this.sync();
+    await this.seed_data_first_time()
   }
 
   async disconnect() {
@@ -52,16 +54,22 @@ class Database {
     }
   }
 
+  async seed_data_first_time() {
+    if (!await is_cards() && !this.isTestEnvironment && process.env.SEED_DB) {
+      await this.seed_database({ model_name: 'Card', seed_data: get_all_cards() });
+    }
+  }
+
   async sync() {
-      await this.connection.sync({
-        logging: false,
-        force: this.isTestEnvironment,
-      });
+    await this.connection.sync({
+      logging: false,
+      force: this.isTestEnvironment,
+    });
 
     if (!this.isTestEnvironment) {
       console.log('Connection synced successfully');
     }
   }
-};
+}
 
 module.exports = Database;

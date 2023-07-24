@@ -9,6 +9,7 @@ const Database = require('./database');
     await db.connect();
     const App = require('./app');
     const app = new App();
+    
     app.listen();
   } catch (err) {
     console.error(

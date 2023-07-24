@@ -13,11 +13,19 @@ class GameController {
     const payload = req.body.jwt;
     const user = await User.findByPk(payload.user_id);
 
-    const game = await Game.create({ user_id: user.id });
+    const game = await Game.create({
+      user_id: user.id,
+      house_balance_fluctuation: 0,
+      user_balance_fluctuation: 0,
+      status: enums.game_status.IN_PROGRESS,
+    });
     if (game) {
       return res.status(200).send({
         success: true,
         message: 'Game successfully started',
+        data: {
+          id: game.dataValues.id,
+        },
       });
     }
     return res.status(400).send({
@@ -27,8 +35,8 @@ class GameController {
   }
   static async finish(req, res) {
     const { game } = req.body;
-    game.status = enums.game_status.COMPLETED
-    game.save()
+    game.status = enums.game_status.COMPLETED;
+    game.save();
 
     return res.status(200).send({
       success: true,
