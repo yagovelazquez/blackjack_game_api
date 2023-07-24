@@ -4,10 +4,10 @@ const Lib = require('../../src/utils/lib');
 const TestHelpers = require('../helpers/test_helpers');
 const ModelPropertyTester = require('../helpers/test_model_properties');
 
-let Game;
+let Game, User;
 
 describe('Game model', () => {
-  let random_game;
+  let random_game, table_hand;
   beforeAll(async () => {
     await TestHelpers.start_db();
   });
@@ -19,7 +19,12 @@ describe('Game model', () => {
   beforeEach(async () => {
     await TestHelpers.sync_db();
     random_game = await TestHelpers.generate_random_game();
+    table_hand = await TestHelpers.generate_random_table_hand();
     Game = models.Game;
+    User = models.User;
+  });
+
+  describe('static', () => {
   });
 
   describe('model properties', () => {

@@ -1,14 +1,17 @@
 const get_all_cards = require('../../../src/database/function_seeders/cards'); 
-const enums = require('../../../src/enum')
+const enums = require('../../../src/enum');
+const { models } = require('../../../src/models');
 
 
 describe('get_all_cards', () => {
+  let generate_id
+  beforeEach(() => {
+    models.Card = {}
+    models.Card.generate_id = jest.fn((rank, suit) => `${rank}_${suit}`)
+    generate_id = models.Card.generate_id
+  })
   it('should generate an array of cards with valid data', () => {
-    const mockCard = {
-      generate_id: jest.fn((rank, suit) => `${rank}_${suit}`),
-    };
-
-    const result = get_all_cards(mockCard);
+    const result = get_all_cards();
 
     expect(result).toBeInstanceOf(Array);
     expect(result.length).toBe(Object.keys(enums.card_suit).length * Object.keys(enums.card_rank).length);
@@ -30,11 +33,7 @@ describe('get_all_cards', () => {
   });
 
   it('should set second value only for ace(1)', () => {
-    const mock_card = {
-      generate_id: jest.fn((rank, suit) => `${rank}_${suit}`),
-    };
-
-    const result = get_all_cards(mock_card);
+    const result = get_all_cards();
     const non_ace_card = result.find((card) => card.rank !== enums.card_rank[1]);
     const ace_card = result.find((card) => card.rank === enums.card_rank[1]);
 
@@ -44,18 +43,14 @@ describe('get_all_cards', () => {
   });
 
   it('should call the generate_id method for each card', () => {
-    const mockCard = {
-      generate_id: jest.fn(),
-    };
-
-    get_all_cards(mockCard);
-    expect(mockCard.generate_id).toHaveBeenCalledTimes(
+    get_all_cards();
+    expect(generate_id).toHaveBeenCalledTimes(
       Object.keys(enums.card_suit).length * Object.keys(enums.card_rank).length
     );
 
     for (const suit in enums.card_suit) {
       for (const rank in enums.card_rank) {
-        expect(mockCard.generate_id).toHaveBeenCalledWith(enums.card_rank[rank], enums.card_suit[suit]);
+        expect(generate_id).toHaveBeenCalledWith(enums.card_rank[rank], enums.card_suit[suit]);
       }
     }
   });

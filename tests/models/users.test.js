@@ -117,6 +117,16 @@ describe('User model', () => {
     });
   });
   describe('password property', () => {
+    it('should not convert the password if its not provided when saving', async () => {
+      const { User } = models;
+      User.hashPassword = jest.fn().mockResolvedValue('hashedPassword');
+      const fake_user = TestHelpers.generate_random_user();
+      const user = await User.create(fake_user);
+      user.balance = 20
+      await user.save()
+      expect(User.hashPassword).toHaveBeenCalledTimes(1);
+    });
+
     it('should convert the password to be hashed before storing in DB', async () => {
       const { User } = models;
       const fake_user = TestHelpers.generate_random_user();

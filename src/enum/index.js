@@ -18,6 +18,10 @@ module.exports = {
     12: '12',
     13: '13',
   },
+  player_actions: {
+    STAND: 'stand',
+    HIT: 'hit'
+  },
   card_suit: {
     CLUBS: 'clubs',
     HEARTS: 'hearts',
@@ -37,4 +41,13 @@ module.exports = {
     ten: '10',
     eleven: '11',
   },
+  game_winner: {
+    DEALER: 'dealer',
+    PLAYER: 'player',
+    DRAW: 'draw',
+  },
+  game_participants: {
+    DEALER: 'dealer',
+    PLAYER: 'player'
+  }
 };

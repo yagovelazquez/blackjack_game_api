@@ -1,34 +1,11 @@
 const TestHelpers = require('./test_helpers');
 const model_property_validator = require('./test_model_properties');
 const { models } = require('../../src/models');
+const BaseModelTester = require('./base_model_helper');
 
-class ModelPropertyTester {
+class ModelPropertyTester extends BaseModelTester {
   constructor(model_name) {
-    this.model_name = model_name;
-    this.Model = models[this.model_name];
-
-    this.model_config = {
-      TableHand: {
-        generate_random_data: TestHelpers.generate_random_table_hand,
-      },
-      User: {
-        generate_random_data: TestHelpers.generate_random_user,
-      },
-      Deck: {
-        generate_random_data: TestHelpers.generate_random_deck,
-      },
-      Game: {
-        generate_random_data: TestHelpers.generate_random_game,
-      },
-      Card: {
-        generate_random_data: TestHelpers.generate_random_card,
-      },
-    };
-
-    const model_properties = this.model_config[model_name];
-    if (model_properties) {
-      Object.assign(this, model_properties);
-    }
+      super(model_name);
   }
 
   async test_store_enum_values(enum_values, property, before_interation_cb) {
@@ -58,7 +35,7 @@ class ModelPropertyTester {
       err = error;
       error_obj = error.errors[0];
     }
-
+    
     expect(err).toBeDefined();
     expect(err.errors.length).toEqual(1);
     expect(error_obj.message).toEqual(error_message);

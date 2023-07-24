@@ -4,9 +4,12 @@ const enums = require('../enum');
 module.exports = (sequelize) => {
   class Game extends Model {
     static associate(models) {
-      Game.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
-      Game.hasMany(models.TableHand, { foreignKey: "user_id", as: "table_hands" });
-      Game.hasOne(models.Deck, { foreignKey: "game_id", as: "deck" });
+      Game.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+      Game.hasMany(models.TableHand, {
+        foreignKey: 'user_id',
+        as: 'table_hands',
+      });
+      Game.hasOne(models.Deck, { foreignKey: 'game_id', as: 'deck' });
     }
   }
 
@@ -30,10 +33,10 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 0.0,
       },
-        user_id: {
+      user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-      }
+      },
     },
     {
       sequelize,

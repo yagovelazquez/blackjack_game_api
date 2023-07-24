@@ -1,7 +1,9 @@
 const { card_rank, card_suit } = require('../../enum');
 const enums = require('../../enum');
+const { models } = require('../../models');
 
-const get_all_cards = (Card) => {
+const get_all_cards = () => {
+  const { Card } = models
   const seed_data = [];
   for (const suit in enums.card_suit) {
     for (const rank in enums.card_rank) {

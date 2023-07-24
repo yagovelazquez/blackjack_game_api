@@ -88,8 +88,10 @@ module.exports = (sequelize) => {
   };
 
   User.beforeSave(async (user, options) => {
+    if (user.password) {
       const hashedPassword = await User.hashPassword(user.password);
       user.password = hashedPassword;
+    }
   });
 
   User.afterCreate((user, options) => {

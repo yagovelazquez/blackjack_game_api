@@ -31,9 +31,9 @@ class TestHelpers {
 
   static async generate_random_deck(deck_params = {}) {
     const { Card, Game } = models;
-    const random_game_data = await TestHelpers.generate_random_game()
-    const random_game = await Game.create(random_game_data) 
-    const all_db_cards = await Card.findAll({ raw: true,  attributes: ['id'], });
+    const random_game_data = await TestHelpers.generate_random_game();
+    const random_game = await Game.create(random_game_data);
+    const all_db_cards = await Card.findAll({ raw: true, attributes: ['id'] });
     const cards = _.times(4, () => all_db_cards)[0];
     return { cards, game_id: random_game.id, ...deck_params };
   }
@@ -73,9 +73,11 @@ class TestHelpers {
   }
 
   static async create_user_and_get_token(app) {
-    const fake_user = TestHelpers.generate_random_user();
-    const res = await request(app).post('/v1/user/register').send(fake_user);
-    return res.body.data;
+    const fake_user = await this.create_new_user({ password: '123' });
+    const res = await request(app)
+      .post('/v1/user/login')
+      .send({ password: '123', email: fake_user.email });
+    return { ...res.body.data, ...fake_user };
   }
 
   static get_app() {
@@ -115,7 +117,13 @@ class TestHelpers {
     const { Game } = models;
     const random_game = await this.generate_random_game();
     const game = await Game.create(random_game);
+    const card = await this.generate_random_card()
+
     return {
+      player_cards: [card, card],
+      dealer_cards: [card],
+      player_points: parseInt(card.value) + parseInt(card.second_value),
+      dealer_points: parseInt(card.value),
       bet_value: 10.5,
       game_id: game.id,
       user_id: random_game.user_id,

@@ -7,6 +7,11 @@ class Lib {
       decimalPlaces !== undefined && decimalPlaces.length === decimal_places
     );
   }
+  static throw_error_not_positive_numbers = (value, name) => {
+    if (value <= 0 || typeof value !== 'number') {
+      throw new Error(`Insert valid value for ${name}`);
+    }
+  }
 }
 
 module.exports = Lib;

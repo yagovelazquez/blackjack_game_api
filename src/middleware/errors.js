@@ -1,5 +1,5 @@
 const errors = (err, req, res, next) => {
-  console.error('Error in errors middleware:\n', err.stack);
+  process.env.NODE_ENV !== 'test' && console.error('Error in errors middleware:\n', err.stack);
   res.status(500).send({ success: false, message: err.message });
 };
 
