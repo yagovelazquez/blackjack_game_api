@@ -54,6 +54,8 @@ class GameActions {
     await hand_utils.handle_player_21_points();
     await hand_utils.save_instances();
 
+    console.log(hand_utils.player)
+
     return res.status(200).send({
       success: true,
       message: 'Action: deal was done successfully',
@@ -83,7 +85,6 @@ class GameActions {
 
     if (hand_utils.player.is_busted) {
       hand_utils.check_who_won_hand()
-      
       await TableHand.finish_hand({
         game,
         table_hand,
@@ -98,10 +99,12 @@ class GameActions {
           dealer: {
             cards: hand_utils.dealer.cards,
             points: hand_utils.dealer.points,
+            is_busted: hand_utils.dealer.is_busted
           },
           player: {
             cards: hand_utils.player.cards,
             points: hand_utils.player.points,
+            is_busted: hand_utils.player.is_busted
           },
           table_hand_id: table_hand.id,
           winner: hand_utils.winner,
