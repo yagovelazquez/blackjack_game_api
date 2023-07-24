@@ -1,6 +1,7 @@
 const { models } = require('../models');
 const ControllerUtils = require('../utils/controller_utils');
 const JWTUtils = require('../utils/jwt_utils');
+const enums = require('../enum');
 
 const { User, Deck, Game, TableHand } = models;
 function game_params(check_models = ['user', 'deck', 'game', 'table_hand']) {
@@ -30,6 +31,12 @@ function game_params(check_models = ['user', 'deck', 'game', 'table_hand']) {
         return ControllerUtils.send_error_response({
           res,
           message: 'Game was not found',
+        });
+      }
+      if (game.status === enums.game_status.COMPLETED) {
+        return ControllerUtils.send_error_response({
+          res,
+          message: 'Game is already completed',
         });
       }
       req.body.game = game;

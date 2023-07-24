@@ -1,6 +1,7 @@
 const game_params = require('../../src/middleware/game_params');
 const { models } = require('../../src/models');
 const ControllerUtils = require('../../src/utils/controller_utils');
+const enums = require('../../src/enum')
 
 jest.mock('../../src/models', () => {
   return {
@@ -70,6 +71,21 @@ describe('game_params middleware', () => {
 
     expect(next).toHaveBeenCalled();
   });
+
+  it('should return a 400 status if game already compelted', async () => {
+    models.Game.findByPk.mockResolvedValue({
+      status: enums.game_status.COMPLETED,
+      ...mockGame,
+    });
+    
+    await game_params()(mockReq, mockRes, jest.fn());
+    expect(ControllerUtils.send_error_response).toHaveBeenCalledWith({
+      res: mockRes,
+      message: 'Game is already completed',
+    });
+
+    expect(jest.fn()).not.toHaveBeenCalled();
+  })
 
   it('should handle missing user', async () => {
     models.User.findByPk.mockResolvedValue(null);

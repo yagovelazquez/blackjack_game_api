@@ -5,6 +5,7 @@ const ModelTestHelper = require('../helpers/model_test_helper');
 const card_seeder = require('../../src/database/function_seeders/cards');
 const enums = require('../../src/enum');
 const MockModelFunctions = require('../helpers/mock/mock_model_functions');
+const HandUtils = require('../../src/utils/hand_utils');
 
 describe('game_actions', () => {
   let user, app, Game, game, Card, User, Deck, TableHand, mock_deck_model;
@@ -283,8 +284,8 @@ describe('game_actions', () => {
         ],
       });
 
-      const mock_table_hand_functions = new MockModelFunctions('TableHand')
-      const mocked_finish_hand = mock_table_hand_functions.finish_hand()
+      const mock_table_hand_functions = new MockModelFunctions('TableHand');
+      const mocked_finish_hand = mock_table_hand_functions.finish_hand();
       const res = await request(app)
         .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
         .set('Authorization', `Bearer ${user.access_token}`)
@@ -302,7 +303,43 @@ describe('game_actions', () => {
       );
       expect(res.body.data.winner).toEqual(enums.game_winner.DEALER);
       expect(table_hand_db.winner).toEqual(enums.game_winner.DEALER);
-      expect(mocked_finish_hand).toHaveBeenCalled()
+      expect(mocked_finish_hand).toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /game/game_id/stand', () => {
+    let res;
+    beforeEach(async () => {
+      const { TableHand } = models;
+      random_table_hand_data = await TestHelpers.generate_random_table_hand({
+        user_id: user.dataValues.id,
+        game_id: game.id,
+      });
+
+      random_table_hand = await TableHand.create(random_table_hand_data);
+      const res = await request(app)
+        .post(`/v1/game/${game.id}/stand?&hand_id=${random_table_hand.id}`)
+        .set('Authorization', `Bearer ${user.access_token}`)
+        .send()
+        .expect(400);
+    });
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+    it('should create a new handutils class', async () => {
+      //implement it
+    });
+    it('should call dealer play to make the play of dealer', async () => {
+      //implement it
+    });
+    it('should check who won', async () => {
+      //implement it
+    });
+    it('should call TableHand.finish_hand', async () => {
+      //implement it
+    });
+    it('should return the payload with the winner', async () => {
+      //implement it
     });
   });
 });

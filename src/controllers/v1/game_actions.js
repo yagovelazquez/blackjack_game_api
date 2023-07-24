@@ -129,6 +129,38 @@ class GameActions {
       },
     });
   }
+
+  static async stand(req,res) {
+    const { game, user, table_hand, deck } = req.body;
+    const hand_utils = new HandUtils({ table_hand, game, user, deck });
+
+    hand_utils.dealer_play()
+    hand_utils.check_who_won_hand()
+
+    await TableHand.finish_hand({
+      game,
+      table_hand,
+      winner: hand_utils.winner,
+      user,
+    });
+
+    return res.status(200).send({
+      success: true,
+      message: 'Action: stand was done successfully',
+      data: {
+        dealer: {
+          cards: hand_utils.dealer.cards,
+          points: hand_utils.dealer.points,
+        },
+        player: {
+          cards: hand_utils.player.cards,
+          points: hand_utils.player.points,
+        },
+        table_hand_id: table_hand.id,
+        winner: hand_utils.winner,
+      },
+    });
+  }
 }
 
 router.post(
@@ -143,6 +175,13 @@ router.post(
   auth((token_type = 'access_token')),
   game_params(),
   GameActions.hit
+);
+
+router.post(
+  '/game/:game_id/stand',
+  auth((token_type = 'access_token')),
+  game_params(),
+  GameActions.stand
 );
 
 module.exports = router;

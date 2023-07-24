@@ -3,8 +3,6 @@ const { models } = require('../models');
 const { Op } = require('sequelize');
 const enums = require('../enum');
 
-const { Card } = models;
-
 class HandUtils {
   constructor({
     deck = { cards: [] },
@@ -155,7 +153,7 @@ class HandUtils {
       throw new Error('Invalid card_quantity. It should be greater than 0.');
     }
     const dealt_cards = this.deck.cards.slice(0, card_quantity);
-    const cards = await Card.findAll({
+    const cards = await models.Card.findAll({
       where: {
         [Op.or]: dealt_cards,
       },
