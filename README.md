@@ -20,7 +20,7 @@ DB_TEST_PORT=3307
 CLIENT_URL=http://localhost:3000
 
 SEED_DB=true
-
+```
 
 
 Then you have to install docker-compose and hit
