@@ -55,7 +55,7 @@ class HandUtils {
 
   async handle_player_21_points() {
     this.count_points();
-    
+
     if (this[enums.game_participants.PLAYER].points === 21) {
       await this.dealer_play();
       this.check_who_won_hand();
@@ -64,7 +64,7 @@ class HandUtils {
   }
 
   async save_instances() {
-    const is_testing = process.env.NODE_ENV === 'test'
+    const is_testing = process.env.NODE_ENV === 'test';
     if (!_.isEmpty(this.deck)) {
       await this.deck.update({ cards: this.cards });
     }
@@ -89,21 +89,23 @@ class HandUtils {
     }
   }
 
-   finish_hand() {
+  finish_hand() {
     if (this.winner === enums.game_winner.DEALER) {
       this.game.house_balance_fluctuation = this.table_hand.bet_value || 0;
-      this.game.user_balance_fluctuation = - this.table_hand.bet_value || 0;
+      this.game.user_balance_fluctuation = -this.table_hand.bet_value || 0;
     }
     if (this.winner === enums.game_winner.PLAYER) {
       this.game.house_balance_fluctuation = -this.table_hand.bet_value || 0;
       this.game.user_balance_fluctuation = this.table_hand.bet_value || 0;
       this.user.balance =
-        parseFloat(this.user.balance) + 2 * parseFloat(this.table_hand.bet_value || 0);
+        parseFloat(this.user.balance) +
+        2 * parseFloat(this.table_hand.bet_value || 0);
     }
 
     if (this.winner === enums.game_winner.DRAW) {
       this.user.balance =
-        parseFloat(this.user.balance) + parseFloat(this.table_hand.bet_value || 0);
+        parseFloat(this.user.balance) +
+        parseFloat(this.table_hand.bet_value || 0);
     }
   }
 

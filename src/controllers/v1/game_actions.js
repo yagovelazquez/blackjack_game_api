@@ -73,7 +73,6 @@ class GameActions {
       participant: enums.game_participants.PLAYER,
     });
 
-   
     await hand_utils.handle_player_is_busted();
     await hand_utils.handle_player_21_points();
     await hand_utils.save_instances();
@@ -102,9 +101,9 @@ class GameActions {
     const { game, user, table_hand, deck } = req.body;
     const hand_utils = new HandUtils({ table_hand, game, user, deck });
 
-    hand_utils.dealer_play();
-    hand_utils.check_who_won_hand();
-    hand_utils.finish_hand();
+    await hand_utils.dealer_play();
+    await hand_utils.check_who_won_hand();
+    await hand_utils.finish_hand();
 
     return res.status(200).send({
       success: true,
