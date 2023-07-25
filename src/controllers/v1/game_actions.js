@@ -104,6 +104,7 @@ class GameActions {
     await hand_utils.dealer_play();
     await hand_utils.check_who_won_hand();
     await hand_utils.finish_hand();
+    await hand_utils.save_instances()
 
     return res.status(200).send({
       success: true,
