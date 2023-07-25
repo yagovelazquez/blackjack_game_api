@@ -1,5 +1,5 @@
 const { models } = require("../../../src/models");
-const { create_deck, finish_hand } = require('./model_functions');
+const { create_deck, finish_hand, update_deck } = require('./model_functions');
 
 class MockModelFunctions {
   constructor(model_name) {

@@ -12,48 +12,6 @@ module.exports = (sequelize) => {
     static associate(models) {
       TableHand.belongsTo(models.Game, { foreignKey: 'game_id', as: 'game' });
     }
-
-    static async finish_hand({ game, table_hand, winner, user }) {
-      //this logic should be replaced to the utils later
-      if (winner === enums.game_winner.DEALER) {
-        await game.update({
-          house_balance_fluctuation: table_hand.bet_value,
-          user_balance_fluctuation: - table_hand.bet_value,
-        });
-        await table_hand.update({winner: enums.game_winner.DEALER})
-        return {
-          player: {
-            balance: user.balance,
-          },
-        };
-      }
-      if (winner === enums.game_winner.PLAYER) {
-        await game.update({
-          house_balance_fluctuation: - table_hand.bet_value,
-          user_balance_fluctuation: table_hand.bet_value,
-        });
-        await table_hand.update({winner: enums.game_winner.PLAYER})
-        const user_update_obj = {
-          player: {
-            balance: parseFloat(user.balance) + 2 * table_hand.bet_value,
-          },
-        };
-        await user.update(user_update_obj.player);
-        return user_update_obj;
-      }
-
-      if (winner === enums.game_winner.DRAW) {
-        await table_hand.update({winner: enums.game_winner.DRAW})
-        const user_update_obj = {
-          player: {
-            balance: parseFloat(user.balance) + parseFloat(table_hand.bet_value),
-          },
-        };
-
-        await user.update(user_update_obj.player);
-        return user_update_obj;
-      }
-    }
   }
 
   TableHand.init(

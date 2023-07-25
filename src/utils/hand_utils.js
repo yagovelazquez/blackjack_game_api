@@ -16,15 +16,16 @@ class HandUtils {
     this.game = game;
     this.user = user;
     this.table_hand = table_hand;
+    this.cards = _.cloneDeep(deck.cards);
 
     this[enums.game_participants.DEALER] = {
-      cards: table_hand.dealer_cards || [],
+      cards: _.cloneDeep(table_hand.dealer_cards) || [],
       points: table_hand.dealer_points || 0,
       is_busted: false,
       ...dealer,
     };
     this[enums.game_participants.PLAYER] = {
-      cards: table_hand.player_cards || [],
+      cards: _.cloneDeep(table_hand.player_cards) || [],
       points: table_hand.player_points || 0,
       is_busted: false,
       ...player,
@@ -45,41 +46,64 @@ class HandUtils {
     return this[participant].points > 21 ? true : false;
   }
 
+  async handle_player_is_busted() {
+    if (this.player.is_busted) {
+      this.check_who_won_hand();
+      await this.finish_hand();
+    }
+  }
+
   async handle_player_21_points() {
     this.count_points();
-
+    
     if (this[enums.game_participants.PLAYER].points === 21) {
       await this.dealer_play();
       this.check_who_won_hand();
-      await models.TableHand.finish_hand({
-        game: this.game,
-        table_hand: this.table_hand,
-        user: this.user,
+      this.finish_hand();
+    }
+  }
+
+  async save_instances() {
+    const is_testing = process.env.NODE_ENV === 'test'
+    if (!_.isEmpty(this.deck)) {
+      await this.deck.update({ cards: this.cards });
+    }
+
+    if (!_.isEmpty(this.game)) {
+      await this.game.save();
+    }
+
+    if (!_.isEmpty(this.user)) {
+      await this.user.save();
+    }
+
+    if (!_.isEmpty(this.table_hand)) {
+      await this.table_hand.update({
+        ...this.table_hand,
+        player_cards: this.player.cards,
+        player_points: this.player_points,
+        dealer_cards: this.dealer.cards,
+        dealer_points: this.dealer.points,
         winner: this.winner,
       });
     }
   }
 
-  async save_instances() {
-    if (!_.isEmpty(this.deck)) {
-      await this.deck.save();
+   finish_hand() {
+    if (this.winner === enums.game_winner.DEALER) {
+      this.game.house_balance_fluctuation = this.table_hand.bet_value || 0;
+      this.game.user_balance_fluctuation = - this.table_hand.bet_value || 0;
     }
-    
-    if (!_.isEmpty(this.game)) {
-      await this.game.save();
+    if (this.winner === enums.game_winner.PLAYER) {
+      this.game.house_balance_fluctuation = -this.table_hand.bet_value || 0;
+      this.game.user_balance_fluctuation = this.table_hand.bet_value || 0;
+      this.user.balance =
+        parseFloat(this.user.balance) + 2 * parseFloat(this.table_hand.bet_value || 0);
     }
-  
-    if (!_.isEmpty(this.user)) {
-      await this.user.save();
-    }
-  
-    if (!_.isEmpty(this.table_hand)) {
-      this.table_hand.dealer_cards = this.dealer.cards
-      this.table_hand.dealer_points = this.dealer.points
-      this.table_hand.player_cards = this.player.cards
-      this.table_hand.player_points = this.player.points
-      this.table_hand.winner = this.winner
-      await this.table_hand.save();
+
+    if (this.winner === enums.game_winner.DRAW) {
+      this.user.balance =
+        parseFloat(this.user.balance) + parseFloat(this.table_hand.bet_value || 0);
     }
   }
 
@@ -152,7 +176,7 @@ class HandUtils {
     if (card_quantity <= 0) {
       throw new Error('Invalid card_quantity. It should be greater than 0.');
     }
-    const dealt_cards = this.deck.cards.slice(0, card_quantity);
+    const dealt_cards = this.cards.slice(0, card_quantity);
     const cards = await models.Card.findAll({
       where: {
         [Op.or]: dealt_cards,
@@ -160,7 +184,7 @@ class HandUtils {
       raw: true,
     });
 
-    this.deck.cards = this.deck.cards.slice(card_quantity);
+    this.cards = this.cards.slice(card_quantity);
     this[participant].cards.push(...cards);
     this.count_points();
     return cards;

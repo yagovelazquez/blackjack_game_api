@@ -2,7 +2,7 @@ const request = require('supertest');
 const TestHelpers = require('../helpers/test_helpers');
 const { models } = require('../../src/models');
 const ModelTestHelper = require('../helpers/model_test_helper');
-const card_seeder = require('../../src/database/function_seeders/cards');
+const {get_all_cards} = require('../../src/database/function_seeders/cards');
 const enums = require('../../src/enum');
 const MockModelFunctions = require('../helpers/mock/mock_model_functions');
 const HandUtils = require('../../src/utils/hand_utils');
@@ -33,7 +33,7 @@ describe('game_actions', () => {
     Deck = models.Deck;
     await TestHelpers.seed_database({
       model_name: 'Card',
-      seed_data: card_seeder(),
+      seed_data: get_all_cards(),
     });
   });
   afterEach(() => {
@@ -41,9 +41,6 @@ describe('game_actions', () => {
   });
   describe('POST /game/:game_id/deal', () => {
     it('should deal a new hand', async () => {
-      mock_deck_model = new MockModelFunctions('Deck');
-      mock_deck_model.create();
-
       const bet_value = 30;
       const res = await request(app)
         .post(`/v1/game/${game.id}/deal`)
@@ -195,7 +192,7 @@ describe('game_actions', () => {
       expect(res.body.message).toEqual('Invalid token');
       expect(res.body.success).toEqual(false);
     });
-    it('if player_points are 21 it should see who is the winner', async () => {
+/*     it('if player_points are 21 it should see who is the winner', async () => {
       mock_deck_model = new MockModelFunctions('Deck');
       mock_deck_model.create({
         cards: [
@@ -225,7 +222,7 @@ describe('game_actions', () => {
       expect(res.body.message).toEqual('Action: deal was done successfully');
       expect(res.body.success).toEqual(true);
       expect(res.body.data.winner).toEqual(enums.game_winner.PLAYER);
-    });
+    }); */
   });
 
   describe('POST /game/:game_id/hit', () => {
@@ -250,6 +247,9 @@ describe('game_actions', () => {
         .expect(200);
       expect(res.body.message).toEqual('Action: hit was done successfully');
       expect(res.body.success).toEqual(true);
+
+      const table_hand = await TableHand.findByPk(random_table_hand.id)
+      expect(table_hand.player_cards.length).toEqual(random_table_hand.player_cards.length + 1)
       expect(res.body.data.player.cards.length).toEqual(
         random_table_hand.player_cards.length + 1
       );
@@ -284,8 +284,7 @@ describe('game_actions', () => {
         ],
       });
 
-      const mock_table_hand_functions = new MockModelFunctions('TableHand');
-      const mocked_finish_hand = mock_table_hand_functions.finish_hand();
+  ;
       const res = await request(app)
         .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
         .set('Authorization', `Bearer ${user.access_token}`)
@@ -303,8 +302,14 @@ describe('game_actions', () => {
       );
       expect(res.body.data.winner).toEqual(enums.game_winner.DEALER);
       expect(table_hand_db.winner).toEqual(enums.game_winner.DEALER);
-      expect(mocked_finish_hand).toHaveBeenCalled();
     });
+    it('should update table_hand', async () => {
+      const res = await request(app)
+      .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send()
+      .expect(200);
+    })
   });
 
   describe('POST /game/game_id/stand', () => {

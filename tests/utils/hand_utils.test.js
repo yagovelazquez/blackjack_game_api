@@ -10,7 +10,6 @@ jest.mock('../../src/models', () => {
         findAll: jest.fn(),
       },
       TableHand: {
-        finish_hand: jest.fn(),
         save: jest.fn(),
       },
       Deck: {
@@ -33,51 +32,75 @@ describe('hand_utils', () => {
   let fake_db_cards;
 
   beforeEach(() => {
-    hand_utils = new HandUtils();
     fake_db_cards = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }];
+    hand_utils = new HandUtils({ deck: { cards: fake_db_cards } });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
+  describe('handle_player_is_busted', () => {
+    let spy_on_who_won_hand, spy_on_finish_hand;
+    beforeEach(() => {
+      spy_on_finish_hand = jest.spyOn(hand_utils, 'finish_hand');
+      spy_on_who_won_hand = jest.spyOn(hand_utils, 'check_who_won_hand');
+    });
+    it('should call check_who_won_hand and finish table if player is busted', async () => {
+      hand_utils.player.is_busted = true;
+      await hand_utils.handle_player_is_busted();
+      expect(spy_on_finish_hand).toHaveBeenCalled();
+      expect(spy_on_who_won_hand).toHaveBeenCalled();
+    });
+    it('should not call any method if player hand is not busted', async () => {
+      hand_utils.player.is_busted = false;
+      await hand_utils.handle_player_is_busted();
+      expect(spy_on_finish_hand).not.toHaveBeenCalled();
+      expect(spy_on_who_won_hand).not.toHaveBeenCalled();
+    });
+  });
+
   describe('save instances', () => {
     it('should call save() on each non-empty instance', async () => {
-      const deck =  {test: 'test', save: jest.fn()};
-      const game = {test: 'test', save: jest.fn()};
-      const user = {test: 'test', save: jest.fn()};
-      const table_hand = {};
-  
+      const deck = { test: 'test', update: jest.fn() };
+      const game = { test: 'test', save: jest.fn() };
+      const table_hand = { test: 'test', update: jest.fn() };
+
       hand_utils.deck = deck;
       hand_utils.game = game;
-      hand_utils.user = user;
       hand_utils.table_hand = table_hand;
-  
-      const deck_save_spy = jest.spyOn(deck, 'save');
+
+      const deck_update_spy = jest.spyOn(deck, 'update');
       const game_save_spy = jest.spyOn(game, 'save');
-      const user_save_spy = jest.spyOn(user, 'save');
-    
+      const table_update_spy = jest.spyOn(table_hand, 'update');
+
       await hand_utils.save_instances();
-  
-      expect(deck_save_spy).toHaveBeenCalled();
+
+      expect(deck_update_spy).toHaveBeenCalled();
       expect(game_save_spy).toHaveBeenCalled();
-      expect(user_save_spy).toHaveBeenCalled();
+      expect(table_update_spy).toHaveBeenCalled();
     });
-  })
+  });
 
   describe('handle_player_21_points', () => {
+    let finish_hand_spy;
+    beforeEach(() => {
+      finish_hand_spy = jest.spyOn(hand_utils, 'finish_hand');
+    });
     it('should handle player with 21 points and dealer with 21 points as a draw', async () => {
-      hand_utils.player.cards = [{ value: enums.card_values.ten }, { value: enums.card_values.one }];
-      hand_utils.dealer.cards = [{ value: enums.card_values.ten }, { value: enums.card_values.one }];
+      hand_utils.player.cards = [
+        { value: enums.card_values.ten },
+        { value: enums.card_values.one },
+      ];
+      hand_utils.dealer.cards = [
+        { value: enums.card_values.ten },
+        { value: enums.card_values.one },
+      ];
 
       await hand_utils.handle_player_21_points();
 
       expect(hand_utils.winner).toBe(enums.game_winner.DRAW);
-      expect(TableHand.finish_hand).toHaveBeenCalledWith(
-        expect.objectContaining({
-          winner: enums.game_winner.DRAW,
-        })
-      );
+      expect(finish_hand_spy).toHaveBeenCalled();
     });
     it('should handle player with 21 points and dealer with 20 points as a win for player', async () => {
       hand_utils.player.cards = [
@@ -92,11 +115,7 @@ describe('hand_utils', () => {
       await hand_utils.handle_player_21_points();
 
       expect(hand_utils.winner).toBe(enums.game_winner.PLAYER);
-      expect(TableHand.finish_hand).toHaveBeenCalledWith(
-        expect.objectContaining({
-          winner: enums.game_winner.PLAYER,
-        })
-      );
+      expect(finish_hand_spy).toHaveBeenCalled();
     });
   });
 
@@ -248,33 +267,96 @@ describe('hand_utils', () => {
     });
   });
 
+  describe('finish_hand', () => {
+    describe('dealer wins', () => {
+      beforeEach(() => {
+        hand_utils.winner = enums.game_winner.DEALER;
+      });
+      it('should update game house balance fluctuation and user fluctuation if dealer wins', () => {
+        hand_utils.table_hand.bet_value = 20;
+        hand_utils.finish_hand();
+        expect(hand_utils.game.house_balance_fluctuation).toEqual(20);
+        expect(hand_utils.game.user_balance_fluctuation).toEqual(-20);
+      });
+      it('should update fluctuations with 0 if table_hand.bet_value does not exists', () => {
+        hand_utils.table_hand.bet_value = undefined;
+        hand_utils.finish_hand();
+        expect(hand_utils.game.house_balance_fluctuation).toEqual(0);
+        expect(hand_utils.game.user_balance_fluctuation).toEqual(0);
+      });
+    });
+
+    describe('player wins', () => {
+      beforeEach(() => {
+        hand_utils.winner = enums.game_winner.PLAYER;
+        hand_utils.table_hand.bet_value = 20;
+      });
+      it('should update game house balance fluctuation and user fluctuation if dealer wins', () => {
+        hand_utils.finish_hand();
+        expect(hand_utils.game.house_balance_fluctuation).toEqual(-20);
+        expect(hand_utils.game.user_balance_fluctuation).toEqual(20);
+      });
+      it('should update fluctuations with 0 if table_hand.bet_value does not exists', () => {
+        hand_utils.table_hand.bet_value = undefined;
+        hand_utils.finish_hand();
+        expect(hand_utils.game.house_balance_fluctuation).toEqual(0);
+        expect(hand_utils.game.user_balance_fluctuation).toEqual(0);
+      });
+      it('should update user.balance to add 2 times the bet value', () => {
+        hand_utils.user = { balance: 10 };
+        hand_utils.finish_hand();
+        expect(hand_utils.user.balance).toEqual(
+          10 + 2 * hand_utils.table_hand.bet_value
+        );
+      });
+      it('should update user.balance to add 2 times 0 if the bet value is not defined', () => {
+        hand_utils.user = { balance: 10 };
+        hand_utils.table_hand.bet_value = undefined;
+        hand_utils.finish_hand();
+        expect(hand_utils.user.balance).toEqual(10 + 2 * 0);
+      });
+    });
+
+    describe('game is a draw', () => {
+      beforeEach(() => {
+        hand_utils.winner = enums.game_winner.DRAW;
+        hand_utils.table_hand.bet_value = 20;
+        hand_utils.user = { balance: 10 };
+      });
+      it('should restore 1 bet value when game is a draw', () => {
+        hand_utils.finish_hand();
+        expect(hand_utils.user.balance).toEqual(
+          10 + hand_utils.table_hand.bet_value
+        );
+      });
+      it('should restore 0 if bet_vañue is not defined', () => {
+        hand_utils.table_hand.bet_value = undefined;
+        hand_utils.finish_hand();
+        expect(hand_utils.user.balance).toEqual(10);
+      });
+    });
+  });
+
   describe('deal_card', () => {
-    it('should deal the specified quantity of cards from the deck', async () => {
+    it('should remove from this.cards the cards, and push it to player or dealer', async () => {
       hand_utils.deck = { cards: fake_db_cards };
-      const dealt_cards_arr = [
-        fake_db_cards[0],
-        fake_db_cards[1],
-        fake_db_cards[2],
-      ];
+      const [cardOne, cardTwo, cardThree, ...restCards] = fake_db_cards;
+      const dealt_cards_arr = [cardOne, cardTwo, cardThree];
       Card.findAll.mockResolvedValue(dealt_cards_arr);
       const dealt_cards = await hand_utils.deal_card({
         card_quantity: 3,
         participant: enums.game_participants.DEALER,
       });
 
-      const expected_dealt_cards = [
-        fake_db_cards[0],
-        fake_db_cards[1],
-        fake_db_cards[2],
-      ];
-      expect(dealt_cards).toEqual(expected_dealt_cards);
-      expect(hand_utils.deck.cards).toEqual([
-        fake_db_cards[3],
-        fake_db_cards[4],
-      ]);
+      expect(dealt_cards).toEqual(dealt_cards_arr);
+      expect(hand_utils.cards).toEqual(restCards);
       expect(hand_utils[enums.game_participants.DEALER].cards).toEqual(
-        expected_dealt_cards
+        dealt_cards_arr
       );
+    });
+    it('should get cards from database', async () => {
+      await hand_utils.deal_card({ card_quantity: 1, participant: 'dealer' });
+      expect(Card.findAll).toHaveBeenCalled();
     });
     it('should throw an error if card_quantity is equal or lower than 0', async () => {
       hand_utils.deck = fake_db_cards;

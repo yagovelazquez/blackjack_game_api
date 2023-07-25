@@ -8,6 +8,7 @@ const enums = require('../../enum');
 
 const router = Router();
 const { Game, User, TableHand, Deck } = models;
+//make transaction on save instances.
 
 class GameActions {
   static async deal(req, res) {
@@ -21,16 +22,14 @@ class GameActions {
       });
     }
 
-    await user.update({ balance: user.balance - bet_value });
-
-    const user_id = user.id;
+    user.balance = user.balance - bet_value;
 
     const new_deck = await Deck.create_shuffled_deck({
       game_id,
       deck_count: 4,
     });
 
-    const hand_utils = new HandUtils({ deck: new_deck });
+    const hand_utils = new HandUtils({ deck: new_deck, user, game });
     await hand_utils.deal_card({
       card_quantity: 1,
       participant: enums.game_participants.DEALER,
@@ -46,15 +45,13 @@ class GameActions {
       player_cards: hand_utils[enums.game_participants.PLAYER].cards,
       dealer_points: hand_utils[enums.game_participants.DEALER].points,
       player_points: hand_utils[enums.game_participants.PLAYER].points,
-      user_id,
+      user_id: user.id,
       bet_value,
     });
 
-    hand_utils.set_properties({ table_hand, game, user, deck: new_deck });
+    hand_utils.set_properties({ table_hand });
     await hand_utils.handle_player_21_points();
     await hand_utils.save_instances();
-
-    console.log(hand_utils.player)
 
     return res.status(200).send({
       success: true,
@@ -71,47 +68,13 @@ class GameActions {
   static async hit(req, res) {
     const { game, user, table_hand, deck } = req.body;
     const hand_utils = new HandUtils({ table_hand, game, user, deck });
-
     await hand_utils.deal_card({
       card_quantity: 1,
       participant: enums.game_participants.PLAYER,
     });
 
-    
-    table_hand.player_cards = hand_utils.player.cards;
-    table_hand.dealer_points = hand_utils.dealer.points;
-    table_hand.player_points = hand_utils.player.points;
-    await table_hand.save();
-
-    if (hand_utils.player.is_busted) {
-      hand_utils.check_who_won_hand()
-      await TableHand.finish_hand({
-        game,
-        table_hand,
-        winner: enums.game_winner.DEALER,
-        user,
-      });
-
-      return res.status(200).send({
-        success: true,
-        message: 'Action: hit was done successfully',
-        data: {
-          dealer: {
-            cards: hand_utils.dealer.cards,
-            points: hand_utils.dealer.points,
-            is_busted: hand_utils.dealer.is_busted
-          },
-          player: {
-            cards: hand_utils.player.cards,
-            points: hand_utils.player.points,
-            is_busted: hand_utils.player.is_busted
-          },
-          table_hand_id: table_hand.id,
-          winner: hand_utils.winner,
-        },
-      });
-    }
-
+   
+    await hand_utils.handle_player_is_busted();
     await hand_utils.handle_player_21_points();
     await hand_utils.save_instances();
 
@@ -122,10 +85,12 @@ class GameActions {
         dealer: {
           cards: hand_utils.dealer.cards,
           points: hand_utils.dealer.points,
+          is_busted: hand_utils.dealer.is_busted,
         },
         player: {
           cards: hand_utils.player.cards,
           points: hand_utils.player.points,
+          is_busted: hand_utils.player.is_busted,
         },
         table_hand_id: table_hand.id,
         winner: hand_utils.winner,
@@ -133,19 +98,13 @@ class GameActions {
     });
   }
 
-  static async stand(req,res) {
+  static async stand(req, res) {
     const { game, user, table_hand, deck } = req.body;
     const hand_utils = new HandUtils({ table_hand, game, user, deck });
 
-    hand_utils.dealer_play()
-    hand_utils.check_who_won_hand()
-
-    await TableHand.finish_hand({
-      game,
-      table_hand,
-      winner: hand_utils.winner,
-      user,
-    });
+    hand_utils.dealer_play();
+    hand_utils.check_who_won_hand();
+    hand_utils.finish_hand();
 
     return res.status(200).send({
       success: true,

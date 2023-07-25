@@ -4,7 +4,7 @@ const Lib = require('../../src/utils/lib');
 const ModelTestHelper = require('../helpers/model_test_helper');
 const TestHelpers = require('../helpers/test_helpers');
 const ModelPropertyTester = require('../helpers/test_model_properties');
-const card_seeder = require('../../src/database/function_seeders/cards');
+const { get_all_cards } = require('../../src/database/function_seeders/cards');
 
 let Game,
   Card,
@@ -35,7 +35,7 @@ describe('Table hand', () => {
     Deck = models.Deck;
     await TestHelpers.seed_database({
       model_name: 'Card',
-      seed_data: card_seeder(Card),
+      seed_data: get_all_cards(Card),
     });
     table_hand_property_validator = new ModelPropertyTester('TableHand');
     table_hand_property_tester = new ModelPropertyTester('TableHand');
@@ -170,89 +170,5 @@ describe('Table hand', () => {
         expect(err).toEqual(error_message);
       });
     });
-  });
-
-  describe('static', () => {
-    describe('finish_table', () => {
-      let game, user, user_balance_before, table_hand;
-      beforeEach(async () => {
-        table_hand_test_helper = new ModelTestHelper('TableHand');
-        const created_table_hand = await table_hand_test_helper.create();
-        table_hand = await TableHand.findByPk(created_table_hand.dataValues.id);
-        game = await Game.findByPk(table_hand.game_id);
-        user = await User.findByPk(table_hand.user_id);
-        user_balance_before = +user.balance;
-      });
-      it('should update game status, table_hand, user accordingly if house wins', async () => {
-        await TableHand.finish_hand({
-          table_hand,
-          winner: enums.game_winner.DEALER,
-          game,
-          user,
-        });
-
-        const updated_user = await User.findByPk(table_hand.user_id);
-        expect(+updated_user.balance).toEqual(user_balance_before);
-
-        const updated_game = await Game.findByPk(table_hand.game_id);
-        expect(updated_game.user_balance_fluctuation).toEqual(
-          (-table_hand.bet_value).toFixed(2)
-        );
- 
-        expect(updated_game.house_balance_fluctuation).toEqual(
-          table_hand.bet_value
-        );
-
-        const updated_hand = await TableHand.findByPk(table_hand.id);
-        expect(updated_hand.winner).toEqual(enums.game_winner.DEALER)
-      });
-      it('should update game,table_hand, user accordingly if player wins', async () => {
-        const user_balance_before = +user.balance;
-         await TableHand.finish_hand({
-          table_hand,
-          winner: enums.game_winner.PLAYER,
-          game,
-          user,
-        });
-
-        const updated_user = await User.findByPk(table_hand.user_id);
-        expect(+updated_user.balance).toEqual(
-          user_balance_before + +table_hand.bet_value * 2
-        );
-
-        const updated_game = await Game.findByPk(table_hand.game_id);
-        expect(+updated_game.user_balance_fluctuation).toEqual(
-          +table_hand.bet_value
-        );
-        expect(+updated_game.house_balance_fluctuation).toEqual(
-          -table_hand.bet_value
-        );
-
-        const updated_hand = await TableHand.findByPk(table_hand.id);
-        expect(updated_hand.winner).toEqual(enums.game_winner.PLAYER)
-      });
-
-      it('should update table_hand, user accordingly if the result is a draw', async () => {
-        const user_balance_before = +user.balance;
-         await TableHand.finish_hand({
-          table_hand,
-          winner: enums.game_winner.DRAW,
-          game,
-          user,
-        });
-
-        const updated_user = await User.findByPk(table_hand.user_id);
-        expect(+updated_user.balance).toEqual(
-          user_balance_before + +table_hand.bet_value
-        );
-
-        const updated_game = await Game.findByPk(table_hand.game_id);
-        expect(updated_game.user_balance_fluctuation).toEqual(game.user_balance_fluctuation);
-        expect(updated_game.house_balance_fluctuation).toEqual(game.house_balance_fluctuation);
-
-        const updated_hand = await TableHand.findByPk(table_hand.id);
-        expect(updated_hand.winner).toEqual(enums.game_winner.DRAW)
-      });
-    });
-  });
+  });    
 });

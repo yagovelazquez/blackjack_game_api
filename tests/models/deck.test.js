@@ -3,7 +3,7 @@ const Lib = require('../../src/utils/lib');
 const TestHelpers = require('../helpers/test_helpers');
 const ModelPropertyTester = require('../helpers/test_model_properties');
 const enums = require('../../src/enum');
-const card_seeder = require('../../src/database/function_seeders/cards');
+const {get_all_cards} = require('../../src/database/function_seeders/cards');
 const ModelTestHelper = require('../helpers/model_test_helper');
 
 let Card;
@@ -30,7 +30,7 @@ describe('Card model', () => {
     Deck = models.Deck;
     await TestHelpers.seed_database({
       model_name: 'Card',
-      seed_data: card_seeder(Card),
+      seed_data: get_all_cards(Card),
     });
     deck_property_tester = new ModelPropertyTester('Deck');
     deck_test_helper = new ModelTestHelper('Deck');

@@ -18,12 +18,11 @@ describe('game', () => {
   });
   beforeEach(async () => {
     await TestHelpers.sync_db();
-    access_token = await TestHelpers.create_user_and_get_token(app)
-      .access_token;
+    const user = await TestHelpers.create_user_and_get_token(app);
+    access_token = user.access_token;
   });
   describe('POST game/start', () => {
     it('should create a game and store in database', async () => {
-      const { access_token } = await TestHelpers.create_user_and_get_token(app);
       const res = await request(app)
         .post('/v1/game/start')
         .set('Authorization', `Bearer ${access_token}`)
@@ -40,18 +39,27 @@ describe('game', () => {
       expect(res.body.success).toEqual(false);
     });
   });
-  describe('POST game/finish', async () => {
-    const game_test_helper = new ModelTestHelper('Game');
-    const game_instance = await game_test_helper.create();
+  describe('POST game/finish', () => {
+    it('should finish the game', async () => {
+      const game_test_helper = new ModelTestHelper('Game');
+      const game_instance = await game_test_helper.create();
 
-    const res = await request(app)
-      .post('/v1/game/finish')
-      .set('Authorization', `Bearer ${access_token}`)
-      .expect(200);
-    expect(res.body.message).toEqual('Game is now finished');
-    expect(res.body.success).toEqual(true);
+      const res = await request(app)
+        .post(`/v1/game/${game_instance.dataValues.id}/finish`)
+        .set('Authorization', `Bearer ${access_token}`)
+        .expect(200);
+      expect(res.body.message).toEqual('Game is now finished');
+      expect(res.body.success).toEqual(true);
 
-    const updated_game = await Game.findByPk(game_instance.dataValues.id);
-    expect(updated_game.status).toEqual(enums.game_status.COMPLETED);
+      const updated_game = await Game.findByPk(game_instance.dataValues.id);
+      expect(updated_game.status).toEqual(enums.game_status.COMPLETED);
+    });
+    it('if game does not exists should return 400', async () => {
+      const res = await request(app)
+        .post(`/v1/game/test/finish`)
+        .set('Authorization', `Bearer ${access_token}`)
+        .expect(400);
+      expect(res.body.message).toEqual('Game was not found');
+    });
   });
 });
