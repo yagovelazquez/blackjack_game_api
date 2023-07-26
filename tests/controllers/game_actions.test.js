@@ -310,6 +310,7 @@ describe('game_actions', () => {
       .send()
       .expect(200);
     })
+    // finish tests
   });
 
   describe('POST /game/game_id/stand', () => {
