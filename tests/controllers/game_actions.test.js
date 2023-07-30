@@ -6,9 +6,20 @@ const { get_all_cards } = require('../../src/database/function_seeders/cards');
 const enums = require('../../src/enum');
 const MockModelFunctions = require('../helpers/mock/mock_model_functions');
 const HandUtils = require('../../src/utils/hand_utils');
+const GameActionHelper = require('../helpers/controllers/game_action_helper');
 
 describe('game_actions', () => {
-  let user, app, Game, game, res, User, Deck, TableHand, mock_deck_model;
+  let user,
+    app,
+    Game,
+    game,
+    res,
+    User,
+    bet_value,
+    Deck,
+    TableHand,
+    mock_deck_model,
+    game_action_controller_helper;
 
   beforeAll(async () => {
     await TestHelpers.start_db();
@@ -37,90 +48,33 @@ describe('game_actions', () => {
     jest.clearAllMocks();
   });
   describe('POST /game/:game_id/deal', () => {
+    beforeEach(() => {
+      bet_value = 30;
+      game_action_controller_helper = new GameActionHelper({
+        app,
+        url: `/v1/game/${game.id}/deal`,
+        headers: ['Authorization', `Bearer ${user.access_token}`],
+        data: { bet_value },
+      });
+    });
     it('should return dealer data, player data, winner as undefined, and table hand id', async () => {
       mock_deck_model.create();
-      const bet_value = 30;
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/deal`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ bet_value })
-        .expect(200);
+      const res = await game_action_controller_helper.request();
       expect(res.body.message).toEqual('Action: deal was done successfully');
       expect(res.body.success).toEqual(true);
-
-      expect(Object.keys(res.body.data)).toEqual([
-        'dealer',
-        'player',
-        'table_hand_id',
-      ]);
-
-      expect(Object.keys(res.body.data.player)).toEqual([
-        'cards',
-        'points',
-        'is_busted',
-      ]);
-
-      expect(Object.keys(res.body.data.dealer)).toEqual([
-        'cards',
-        'points',
-        'is_busted',
-      ]);
-
-      expect(res.body.data.winner).not.toBeDefined();
-
-      expect(res.body.data.player.points).toBeDefined();
-      expect(typeof res.body.data.player.points).toBe('number');
-
-      expect(res.body.data.dealer.points).toBeDefined();
-      expect(typeof res.body.data.dealer.points).toBe('number');
-
-      expect(res.body.data.dealer.cards.length).toBe(1);
-      expect(Object.keys(res.body.data.dealer.cards[0])).toEqual([
-        'id',
-        'rank',
-        'suit',
-        'value',
-        'second_value',
-      ]);
-
-      expect(res.body.data.player.cards.length).toBe(2);
-      expect(Object.keys(res.body.data.player.cards[0])).toEqual([
-        'id',
-        'rank',
-        'suit',
-        'value',
-        'second_value',
-      ]);
-      expect(Object.keys(res.body.data.player.cards[1])).toEqual([
-        'id',
-        'rank',
-        'suit',
-        'value',
-        'second_value',
-      ]);
+      GameActionHelper.test_data_object_is_in_res(res);
     });
     it('should update users balance', async () => {
-      const bet_value = 30;
       mock_deck_model.create();
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/deal`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ bet_value })
-        .expect(200);
-
+      await game_action_controller_helper.request();
       const updated_user = await User.findByPk(user.dataValues.id);
       expect(updated_user.balance).toEqual(
         (user.dataValues.balance - bet_value).toFixed(2)
       );
     });
     it('should create a new shuffled deck, with around 210 cards', async () => {
-      const bet_value = 30;
       const spy_shuffled_deck = jest.spyOn(Deck, 'create_shuffled_deck');
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/deal`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ bet_value })
-        .expect(200);
+      await game_action_controller_helper.request();
       const deck_after_endpoint = await Deck.findOne({
         where: {
           game_id: game.id,
@@ -136,14 +90,8 @@ describe('game_actions', () => {
       expect(deck_after_endpoint.cards.length).toBeLessThan(52 * 4);
     });
     it('should create a new table hand, with player info and dealer info', async () => {
-      const bet_value = 30;
       mock_deck_model.create();
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/deal`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ bet_value })
-        .expect(200);
-
+      await game_action_controller_helper.request();
       const table_hand_after_endpoint = await TableHand.findOne({
         where: {
           user_id: user.dataValues.id,
@@ -164,39 +112,39 @@ describe('game_actions', () => {
           id: user2.dataValues.id,
         },
       });
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/deal`)
-        .set('Authorization', `Bearer ${user2.access_token}`)
-        .send({ bet_value: 30 })
-        .expect(400);
+      game_action_controller_helper.headers = [
+        'Authorization',
+        `Bearer ${user2.access_token}`,
+      ];
+
+      const res = await game_action_controller_helper.request({
+        expected_status: 400,
+      });
       expect(res.body.message).toEqual('User was not found');
       expect(res.body.success).toEqual(false);
     });
 
     it('should return 400 if balance < bet_value', async () => {
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/deal`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ bet_value: user.dataValues.balance + 1 })
-        .expect(400);
+      const res = await game_action_controller_helper.request({
+        data: { bet_value: user.dataValues.balance + 1 },
+        expected_status: 400,
+      });
       expect(res.body.message).toEqual('Your balance is too low');
       expect(res.body.success).toEqual(false);
     });
-
     it('should return 400 if game not found', async () => {
-      const res = await request(app)
-        .post(`/v1/game/200/deal`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ bet_value: 30 })
-        .expect(400);
+      game_action_controller_helper.url = '/v1/game/200/deal'
+      const res = await game_action_controller_helper.request({
+        expected_status: 400,
+      });
       expect(res.body.message).toEqual('Game was not found');
       expect(res.body.success).toEqual(false);
     });
     it('should return status 401 if user not logged in', async () => {
-      const res = await request(app)
-        .post('/v1/game/start')
-        .set('Authorization', `Bearer 123`)
-        .expect(401);
+      game_action_controller_helper.headers = ['Authorization', `Bearer 123`]
+      const res = await game_action_controller_helper.request({
+        expected_status: 401,
+      });
       expect(res.body.message).toEqual('Invalid token');
       expect(res.body.success).toEqual(false);
     });
@@ -288,6 +236,7 @@ describe('game_actions', () => {
       );
       random_table_hand = await TableHand.create(random_table_hand_data);
     });
+
     it('should add one card to the player', async () => {
       const res = await request(app)
         .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
@@ -307,6 +256,57 @@ describe('game_actions', () => {
       expect(res.body.data.dealer.cards.length).toEqual(
         random_table_hand.dealer_cards.length
       );
+    });
+
+    describe('player_points < 21', () => {
+      it('should return an object with dealer obj, player obj, table_hand_id and winner', async () => {
+        await random_table_hand.update({
+          player_cards: [
+            {
+              id: '1c',
+              rank: '1',
+              suit: 'clubs',
+              value: '1',
+              second_value: null,
+            },
+          ],
+        });
+
+        const res = await request(app)
+          .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
+          .set('Authorization', `Bearer ${user.access_token}`)
+          .send()
+          .expect(200);
+
+        GameActionHelper.test_data_object_is_in_res(res);
+      });
+      it('should update table_hand', async () => {
+        const res = await request(app)
+          .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
+          .set('Authorization', `Bearer ${user.access_token}`)
+          .send()
+          .expect(200);
+
+        const table_hand_db = await TableHand.findByPk(random_table_hand.id);
+        const deck_db = await Deck.findByPk(random_deck.id);
+        const game_db = await Game.findByPk(game.id);
+
+        expect(table_hand_db.winner).toBe(null);
+        expect(table_hand_db.dataValues.player_points).not.toBeGreaterThanOrEqual(21);
+        expect(+table_hand_db.dataValues.player_cards.length).toEqual(+random_table_hand.player_cards.length + 1)
+        expect(table_hand_db.dataValues.dealer_cards.length).toEqual(random_table_hand.dealer_cards.length)
+
+        expect(deck_db.dataValues.cards.length).not.toBeGreaterThanOrEqual(
+          random_deck.cards.length
+        );
+
+        expect(+game_db.dataValues.house_balance_fluctuation).toEqual(
+          0
+        );
+        expect(-(-game_db.dataValues.user_balance_fluctuation)).toEqual(
+         0
+        );
+      });
     });
 
     describe('player hand is busted', () => {
@@ -392,6 +392,7 @@ describe('game_actions', () => {
           ],
         });
       });
+
       describe('winner = PLAYER', () => {
         let res;
         beforeEach(async () => {
@@ -454,11 +455,11 @@ describe('game_actions', () => {
               },
             ],
           });
-  
+
           res = await request(app)
             .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
             .set('Authorization', `Bearer ${user.access_token}`)
-            .send({ test: 'test' })
+            .send()
             .expect(200);
         });
         it('should return and save in db WINNER = DRAW, if player have 21 points and dealer 21', async () => {
@@ -469,26 +470,24 @@ describe('game_actions', () => {
           const deck_db = await Deck.findByPk(random_deck.id);
           const game_db = await Game.findByPk(game.id);
           const user_db = await User.findByPk(user.id);
-  
-          expect(table_hand_db.dataValues.winner).toEqual(enums.game_winner.DRAW);
+
+          expect(table_hand_db.dataValues.winner).toEqual(
+            enums.game_winner.DRAW
+          );
           expect(table_hand_db.dataValues.player_points).toEqual(21);
-  
+
           expect(deck_db.dataValues.cards.length).not.toBeGreaterThanOrEqual(
             random_deck.cards.length
           );
-  
-          expect(+game_db.dataValues.house_balance_fluctuation).toEqual(
-            0
-          );
-          expect(+game_db.dataValues.user_balance_fluctuation).toEqual(
-            0
-          );
-  
+
+          expect(+game_db.dataValues.house_balance_fluctuation).toEqual(0);
+          expect(+game_db.dataValues.user_balance_fluctuation).toEqual(0);
+
           expect(+user_db.balance).toEqual(
             +user.balance + +random_table_hand.bet_value
           );
         });
-      });  
+      });
     });
   });
 
