@@ -8,7 +8,7 @@ const MockModelFunctions = require('../helpers/mock/mock_model_functions');
 const HandUtils = require('../../src/utils/hand_utils');
 
 describe('game_actions', () => {
-  let user, app, Game, game, Card, User, Deck, TableHand, mock_deck_model;
+  let user, app, Game, game, res, User, Deck, TableHand, mock_deck_model;
 
   beforeAll(async () => {
     await TestHelpers.start_db();
@@ -310,40 +310,31 @@ describe('game_actions', () => {
     });
 
     describe('player hand is busted', () => {
+      let res;
       beforeEach(async () => {
         await random_table_hand.update({
           player_cards: [
             {
               id: 'Kc',
-              rank: '13',
               value: '10',
-              suit: 'clubs',
-              second_value: null,
             },
             {
               id: 'Jc',
-              rank: '11',
               value: '10',
-              suit: 'clubs',
-              second_value: null,
             },
             {
               id: '1c',
-              rank: '1',
               value: '1',
-              suit: 'clubs',
-              second_value: null,
             },
           ],
         });
-      });
-      it('it should return player data object, with is_busted = true , points > 21, dealer winner', async () => {
-        const res = await request(app)
+        res = await request(app)
           .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
           .set('Authorization', `Bearer ${user.access_token}`)
-          .send({ test: 'test' })
+          .send()
           .expect(200);
-
+      });
+      it('it should return player data object, with is_busted = true , points > 21, dealer winner', async () => {
         expect(res.body.message).toEqual('Action: hit was done successfully');
         expect(res.body.success).toEqual(true);
         expect(res.body.data.player.cards.length).toEqual(
@@ -358,12 +349,6 @@ describe('game_actions', () => {
         expect(res.body.data.winner).toEqual(enums.game_winner.DEALER);
       });
       it('should update game, deck, table_hand', async () => {
-        const res = await request(app)
-          .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
-          .set('Authorization', `Bearer ${user.access_token}`)
-          .send({ test: 'test' })
-          .expect(200);
-
         const table_hand_db = await TableHand.findByPk(random_table_hand.id);
         const deck_db = await Deck.findByPk(random_deck.id);
         const game_db = await Game.findByPk(game.id);
@@ -386,226 +371,125 @@ describe('game_actions', () => {
       });
     });
 
-    it('should return and save in db player win, if play have 21 points and dealer not 21', async () => {
-      await random_table_hand.update({
-        player_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-          {
-            id: 'Jc',
-            rank: '11',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
-        dealer_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
+    describe('player 21 points', () => {
+      beforeEach(async () => {
+        await random_table_hand.update({
+          player_cards: [
+            {
+              id: 'Kc',
+              value: '10',
+            },
+            {
+              id: 'Jc',
+              value: '10',
+            },
+          ],
+          dealer_cards: [
+            {
+              id: 'Kc',
+              value: '10',
+            },
+          ],
+        });
+      });
+      describe('winner = PLAYER', () => {
+        let res;
+        beforeEach(async () => {
+          await random_deck.update({
+            cards: [
+              {
+                id: '1c',
+              },
+              {
+                id: 'Jh',
+              },
+            ],
+          });
+          res = await request(app)
+            .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
+            .set('Authorization', `Bearer ${user.access_token}`)
+            .send()
+            .expect(200);
+        });
+        it('should return WINNER = player', async () => {
+          expect(res.body.data.winner).toEqual(enums.game_winner.PLAYER);
+        });
+        it('should update game, deck, table_hand, user', async () => {
+          const table_hand_db = await TableHand.findByPk(random_table_hand.id);
+          const deck_db = await Deck.findByPk(random_deck.id);
+          const game_db = await Game.findByPk(game.id);
+          const user_db = await User.findByPk(user.id);
+
+          expect(table_hand_db.dataValues.winner).toEqual(
+            enums.game_winner.PLAYER
+          );
+          expect(table_hand_db.dataValues.player_points).toEqual(21);
+
+          expect(deck_db.dataValues.cards.length).not.toBeGreaterThanOrEqual(
+            random_deck.cards.length
+          );
+
+          expect(+game_db.dataValues.house_balance_fluctuation).toEqual(
+            -random_table_hand.bet_value
+          );
+          expect(+game_db.dataValues.user_balance_fluctuation).toEqual(
+            +random_table_hand.bet_value
+          );
+
+          expect(+user_db.balance).toEqual(
+            +user.balance + 2 * +random_table_hand.bet_value
+          );
+        });
       });
 
-      random_deck.update({
-        cards: [
-          {
-            id: '1c',
-          },
-          {
-            id: 'Jh',
-          },
-          {
-            id: 'Jh',
-          },
-          {
-            id: 'Jh',
-          },
-          {
-            id: 'Jh',
-          },
-        ],
-      });
-
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ test: 'test' })
-        .expect(200);
-
-      const hand_table_db = await TableHand.findByPk(random_table_hand.id);
-
-      expect(res.body.data.winner).toEqual(enums.game_participants.PLAYER);
-      expect(hand_table_db.winner).toEqual(enums.game_participants.PLAYER);
+      describe('WINNER = DRAW, both 21 points', () => {
+        beforeEach(async () => {
+          await random_deck.update({
+            cards: [
+              {
+                id: '1c',
+              },
+              {
+                id: '1c',
+              },
+            ],
+          });
+  
+          res = await request(app)
+            .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
+            .set('Authorization', `Bearer ${user.access_token}`)
+            .send({ test: 'test' })
+            .expect(200);
+        });
+        it('should return and save in db WINNER = DRAW, if player have 21 points and dealer 21', async () => {
+          expect(res.body.data.winner).toEqual(enums.game_winner.DRAW);
+        });
+        it('should update game, deck, table_hand, user', async () => {
+          const table_hand_db = await TableHand.findByPk(random_table_hand.id);
+          const deck_db = await Deck.findByPk(random_deck.id);
+          const game_db = await Game.findByPk(game.id);
+          const user_db = await User.findByPk(user.id);
+  
+          expect(table_hand_db.dataValues.winner).toEqual(enums.game_winner.DRAW);
+          expect(table_hand_db.dataValues.player_points).toEqual(21);
+  
+          expect(deck_db.dataValues.cards.length).not.toBeGreaterThanOrEqual(
+            random_deck.cards.length
+          );
+  
+          expect(+game_db.dataValues.house_balance_fluctuation).toEqual(
+            0
+          );
+          expect(+game_db.dataValues.user_balance_fluctuation).toEqual(
+            0
+          );
+  
+          expect(+user_db.balance).toEqual(
+            +user.balance + +random_table_hand.bet_value
+          );
+        });
+      });  
     });
-    it('should return and save in db WINNER = PLAYER, if player have 21 points and dealer not 21', async () => {
-      await random_table_hand.update({
-        player_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-          {
-            id: 'Jc',
-            rank: '11',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
-        dealer_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
-      });
-
-      random_deck.update({
-        cards: [
-          {
-            id: '1c',
-          },
-          {
-            id: 'Jh',
-          },
-        ],
-      });
-
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ test: 'test' })
-        .expect(200);
-
-      const hand_table_db = await TableHand.findByPk(random_table_hand.id);
-      expect(res.body.data.winner).toEqual(enums.game_winner.PLAYER);
-      expect(hand_table_db.winner).toEqual(enums.game_winner.PLAYER);
-    });
-    it('should return and save in db WINNER = DRAW, if player have 21 points and dealer 21', async () => {
-      await random_table_hand.update({
-        player_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-          {
-            id: 'Jc',
-            rank: '11',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
-        dealer_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
-      });
-
-      random_deck.update({
-        cards: [
-          {
-            id: '1c',
-          },
-          {
-            id: '1c',
-          },
-        ],
-      });
-
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ test: 'test' })
-        .expect(200);
-
-      const hand_table_db = await TableHand.findByPk(random_table_hand.id);
-
-      expect(res.body.data.winner).toEqual(enums.game_winner.DRAW);
-      expect(hand_table_db.winner).toEqual(enums.game_winner.DRAW);
-    });
-    it('should return and save in db WINNER = DRAW, if player have 21 points and dealer 21', async () => {
-      await random_table_hand.update({
-        player_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-          {
-            id: 'Jc',
-            rank: '11',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
-        dealer_cards: [
-          {
-            id: 'Kc',
-            rank: '13',
-            value: '10',
-            suit: 'clubs',
-            second_value: null,
-          },
-        ],
-      });
-
-      random_deck.update({
-        cards: [
-          {
-            id: '1c',
-          },
-          {
-            id: '1c',
-          },
-        ],
-      });
-
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send({ test: 'test' })
-        .expect(200);
-
-      const hand_table_db = await TableHand.findByPk(random_table_hand.id);
-
-      expect(res.body.data.winner).toEqual(enums.game_winner.DRAW);
-      expect(hand_table_db.winner).toEqual(enums.game_winner.DRAW);
-    });
-    it('should update table_hand', async () => {
-      const res = await request(app)
-        .post(`/v1/game/${game.id}/hit?&hand_id=${random_table_hand.id}`)
-        .set('Authorization', `Bearer ${user.access_token}`)
-        .send()
-        .expect(200);
-    });
-    // finish tests
   });
 
   describe('POST /game/game_id/stand', () => {

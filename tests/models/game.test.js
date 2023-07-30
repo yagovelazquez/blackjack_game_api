@@ -73,6 +73,7 @@ describe('Game model', () => {
 
     describe('house_balance_fluctuation', () => {
       it('should create a game and return a valid decimal number', async () => {
+        random_game.house_balance_fluctuation = 104.45
         const game = await Game.create(random_game);
         expect(typeof game.house_balance_fluctuation).toBe('number');
         expect(game.house_balance_fluctuation % 1 !== 0).toBe(true);
@@ -122,6 +123,7 @@ describe('Game model', () => {
 
     describe('user_balance_fluctuation', () => {
       it('should create a game and return a value that is the opposite of house_balance_fluctuation', async () => {
+        random_game.house_balance_fluctuation = 100.4
         const { stored_db_instance: db_game } =
           await TestHelpers.create_and_find_in_db('Game', random_game);
         expect(Number(db_game.user_balance_fluctuation)).toBe(

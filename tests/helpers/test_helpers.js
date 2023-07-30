@@ -108,7 +108,8 @@ class TestHelpers {
     return {
       user_id: user.id,
       status: enums.game_status.IN_PROGRESS,
-      house_balance_fluctuation: 100.2,
+      house_balance_fluctuation: 0,
+      user_balance_fluctuation: 0,
       ...game_params,
     };
   };
