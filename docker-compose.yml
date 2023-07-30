@@ -4,7 +4,7 @@ services:
   db:
     image: mysql:latest
     volumes: 
-        - ./init:/docker-entrypoint-initdb.d
+        - .blackjack_api:/code
     ports:
         - "${DB_PORT}:3306"
     restart: always
@@ -17,7 +17,7 @@ services:
   db-test:
     image: mysql:latest
     volumes: 
-        - ./init:/docker-entrypoint-initdb.d
+        - .blackjack_api:/code
     ports:
         - "${DB_TEST_PORT}:3306"
     restart: always

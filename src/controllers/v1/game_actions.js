@@ -56,12 +56,7 @@ class GameActions {
     return res.status(200).send({
       success: true,
       message: 'Action: deal was done successfully',
-      data: {
-        dealer: hand_utils.dealer,
-        player: hand_utils.player,
-        table_hand_id: table_hand.id,
-        winner: hand_utils.winner,
-      },
+      data: hand_utils.create_data_object(),
     });
   }
 
@@ -76,24 +71,11 @@ class GameActions {
     await hand_utils.handle_player_is_busted();
     await hand_utils.handle_player_21_points();
     await hand_utils.save_instances();
-
+    
     return res.status(200).send({
       success: true,
       message: 'Action: hit was done successfully',
-      data: {
-        dealer: {
-          cards: hand_utils.dealer.cards,
-          points: hand_utils.dealer.points,
-          is_busted: hand_utils.dealer.is_busted,
-        },
-        player: {
-          cards: hand_utils.player.cards,
-          points: hand_utils.player.points,
-          is_busted: hand_utils.player.is_busted,
-        },
-        table_hand_id: table_hand.id,
-        winner: hand_utils.winner,
-      },
+      data: hand_utils.create_data_object(),
     });
   }
 
@@ -104,23 +86,12 @@ class GameActions {
     await hand_utils.dealer_play();
     await hand_utils.check_who_won_hand();
     await hand_utils.finish_hand();
-    await hand_utils.save_instances()
+    await hand_utils.save_instances();
 
     return res.status(200).send({
       success: true,
       message: 'Action: stand was done successfully',
-      data: {
-        dealer: {
-          cards: hand_utils.dealer.cards,
-          points: hand_utils.dealer.points,
-        },
-        player: {
-          cards: hand_utils.player.cards,
-          points: hand_utils.player.points,
-        },
-        table_hand_id: table_hand.id,
-        winner: hand_utils.winner,
-      },
+      data: hand_utils.create_data_object(),
     });
   }
 }

@@ -63,8 +63,16 @@ class HandUtils {
     }
   }
 
+  create_data_object() {
+    return {
+      dealer: this.dealer,
+      player: this.player,
+      table_hand_id: this.table_hand.id,
+      winner: this.winner,
+    }
+  }
+
   async save_instances() {
-    const is_testing = process.env.NODE_ENV === 'test';
     if (!_.isEmpty(this.deck)) {
       await this.deck.update({ cards: this.cards });
     }
@@ -81,7 +89,7 @@ class HandUtils {
       await this.table_hand.update({
         ...this.table_hand,
         player_cards: this.player.cards,
-        player_points: this.player_points,
+        player_points: this.player.points,
         dealer_cards: this.dealer.cards,
         dealer_points: this.dealer.points,
         winner: this.winner,

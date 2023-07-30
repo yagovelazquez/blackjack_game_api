@@ -6,7 +6,7 @@ module.exports = {
     const { Deck } = models;
     const mock_spy_deck = jest.spyOn(Deck, 'create');
     mock_spy_deck.mockResolvedValueOnce({
-      save: jest.fn(),
+      update: jest.fn(),
       cards: [
         {
           id: '6h',
@@ -20,12 +20,9 @@ module.exports = {
       ],
       ...params,
     });
-  },
-  update_deck: (params = {}) => {
-    const { Deck } = models;
-    const mock_spy_deck = jest.spyOn(Deck, 'update');
     return mock_spy_deck
   },
+
   finish_hand: (params = {}) => {
     const { TableHand } = models;
     const mock_spy_table_hand = jest.spyOn(TableHand, 'finish_hand');
